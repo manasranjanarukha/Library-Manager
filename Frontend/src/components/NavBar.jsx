@@ -27,7 +27,11 @@ export default function NavBar() {
   ];
 
   const readerNavigation = [
-    { name: "Favorite Book", href: "#", current: true },
+    {
+      name: "Favorite Book",
+      to: `reader/:${user?._id}/favorites`,
+      current: true,
+    },
   ];
   const navigation = role === "author" ? authorNavigation : readerNavigation;
   return (
@@ -75,7 +79,7 @@ export default function NavBar() {
                         "rounded-md px-3 py-2 text-sm font-medium", // always applied
                         location.pathname === item.to
                           ? "bg-gray-950/50 text-white" // active
-                          : "text-gray-300 hover:bg-white/5 hover:text-white" // inactive
+                          : "text-gray-300 hover:bg-white/5 hover:text-white", // inactive
                       )}
                     >
                       {item.name}
@@ -172,7 +176,7 @@ export default function NavBar() {
                 location.pathname === item.to
                   ? "bg-gray-950/50 text-white" // active state
                   : "text-gray-300 hover:bg-white/5 hover:text-white", // inactive
-                "block rounded-md px-3 py-2 text-base font-medium"
+                "block rounded-md px-3 py-2 text-base font-medium",
               )}
             >
               {item.name}

@@ -30,5 +30,5 @@ bookItemsRouter.put(
   bookItemsController.editBookItem,
 );
 bookItemsRouter.delete("/:id", bookItemsController.deleteBookItem);
-bookItemsRouter.post("/star/:id", bookItemsController.getFavoriteBooks);
+
 module.exports = bookItemsRouter;

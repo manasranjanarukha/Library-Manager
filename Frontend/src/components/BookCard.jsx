@@ -4,7 +4,7 @@ import { useContext } from "react";
 import { Star, Calendar, BookOpen, IndianRupee } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/userContext";
-import { favBook } from "../service/bookService";
+import { favBook } from "../service/favService";
 const API_URL = import.meta.env.VITE_API_URL;
 export default function BookCard({ book }) {
   const { user } = useContext(UserContext);
@@ -23,8 +23,11 @@ export default function BookCard({ book }) {
     try {
       const data = await favBook(book.id); // ✅ pass ID only
       console.log("Favorite response:", data);
+      alert(data.message);
+
+      navigate(`/reader/${user?._id}/favorites`);
     } catch (error) {
-      console.error("Error fetching favorite books:", error);
+      alert(error.message);
     }
   };
 

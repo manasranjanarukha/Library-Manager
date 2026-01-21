@@ -16,6 +16,7 @@ const app = express();
 const rootDir = require("./utils/pathUtil");
 const bookItemsRouter = require("./Routes/bookItemsRouter");
 const authRouter = require("./Routes/authRouter");
+const favRouter = require("./Routes/favRouter");
 const reviewItemsRouter = require("./Routes/reviewRouter");
 
 // Session Store
@@ -27,7 +28,7 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true,
-  })
+  }),
 );
 app.use(express.static(path.join(rootDir, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -37,7 +38,7 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true,
-  })
+  }),
 );
 app.use(express.json({ limit: "10mb" }));
 
@@ -53,11 +54,12 @@ app.use(
       sameSite: "lax",
       secure: false,
     },
-  })
+  }),
 );
 
 app.use("/book-items", bookItemsRouter);
 app.use("/auth", authRouter);
+app.use("/favorites", favRouter);
 app.use("/reviews", reviewItemsRouter);
 
 const port = process.env.PORT;

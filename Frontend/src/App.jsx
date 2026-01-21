@@ -72,8 +72,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/reader/:readerId/favorites"
+            element={
+              <ProtectedRoute allowedRoles={["Reader"]}>
+                <FavoriteBooks />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-        <FavoriteBooks />
       </UserProvider>
     </>
   );

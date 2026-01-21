@@ -17,7 +17,6 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
       </div>
     );
   }
-  console.log("User Logged", user);
 
   if (!user) {
     return <Navigate to="/auth/login" replace />;

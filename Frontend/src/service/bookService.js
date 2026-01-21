@@ -116,19 +116,6 @@ export const bookDetailFromServer = async (id) => {
   return bookItemToLocalItem(data);
 };
 
-export const favBook = async (id) => {
-  const response = await fetch(`${API_URL}/book-items/star/${id}`, {
-    method: "POST",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to favorite book");
-  }
-
-  return response.json();
-};
-
 const bookItemToLocalItem = (bookItem) => {
   return {
     id: bookItem._id, // MongoDB document ID

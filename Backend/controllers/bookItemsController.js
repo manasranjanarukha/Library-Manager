@@ -261,15 +261,3 @@ exports.getBookItemById = async (req, res, next) => {
     res.status(500).json({ message: "Server error while fetching book" });
   }
 };
-
-exports.getFavoriteBooks = async (req, res) => {
-  const bookId = req.params.id;
-  console.log(bookId, "bookid");
-  const favBook = await Book.findById(bookId);
-
-  res.status(200).json({
-    success: true,
-    bookId,
-    favBook,
-  });
-};
