@@ -17,3 +17,22 @@ export const favBook = async (bookId) => {
 
   return data;
 };
+
+export const fetchFavBooks = async () => {
+  const response = await fetch(`${API_URL}/favorites/stars`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const data = await response.json(); // ✅ always read body
+
+  if (!response.ok) {
+    // Print backend error message
+    console.error("Backend error:", data);
+
+    // Throw backend message to caller
+    throw new Error(data.message || "Failed to fetch favorite books");
+  }
+
+  return data;
+};

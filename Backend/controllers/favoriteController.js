@@ -34,3 +34,19 @@ exports.addFavorite = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.fetchFavorites = async (req, res) => {
+  try {
+    const userId = req.user.id; // from auth middleware
+    const favorites = await Favorite.find({ user: userId }).populate("book");
+    console.log(favorites);
+
+    res.status(200).json({
+      success: true,
+      favorites,
+    });
+  } catch (error) {
+    console.error("Fetch favorites error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

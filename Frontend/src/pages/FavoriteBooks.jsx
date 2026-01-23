@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { Star, Heart, Trash2, BookOpen, Search, Filter } from "lucide-react";
 import { UserContext } from "../context/userContext";
 import BookCard from "../components/BookCard";
+import { fetchFavBooks } from "../service/favService";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -22,44 +23,43 @@ export default function FavoriteBooks() {
   const fetchFavorites = async () => {
     try {
       setLoading(true);
-      // Replace with actual API call
-      // const response = await fetch(`${API_URL}/favorites/${user.id}`);
-      // const data = await response.json();
+      const favData = await fetchFavBooks();
+      const books = favData.favorites.map((fav) => fav.book);
 
       // Mock data for demonstration
-      const mockFavorites = [
-        {
-          id: 1,
-          title: "The Great Gatsby",
-          author: "F. Scott Fitzgerald",
-          cover: "gatsby.jpg",
-          genre: "Classic",
-          rating: 4.5,
-          price: 299,
-          description:
-            "A classic American novel set in the Jazz Age, exploring themes of wealth, love, and the American Dream.",
-          publishedYear: 1925,
-          pages: 180,
-          addedDate: "2024-01-15",
-        },
-        {
-          id: 2,
-          title: "To Kill a Mockingbird",
-          author: "Harper Lee",
-          cover: "mockingbird.jpg",
-          genre: "Fiction",
-          rating: 4.8,
-          price: 350,
-          description:
-            "A gripping tale of racial injustice and childhood innocence in the American South.",
-          publishedYear: 1960,
-          pages: 324,
-          addedDate: "2024-01-10",
-        },
-      ];
+      // const mockFavorites = [
+      //   {
+      //     id: 1,
+      //     title: "The Great Gatsby",
+      //     author: "F. Scott Fitzgerald",
+      //     cover: "gatsby.jpg",
+      //     genre: "Classic",
+      //     rating: 4.5,
+      //     price: 299,
+      //     description:
+      //       "A classic American novel set in the Jazz Age, exploring themes of wealth, love, and the American Dream.",
+      //     publishedYear: 1925,
+      //     pages: 180,
+      //     addedDate: "2024-01-15",
+      //   },
+      //   {
+      //     id: 2,
+      //     title: "To Kill a Mockingbird",
+      //     author: "Harper Lee",
+      //     cover: "mockingbird.jpg",
+      //     genre: "Fiction",
+      //     rating: 4.8,
+      //     price: 350,
+      //     description:
+      //       "A gripping tale of racial injustice and childhood innocence in the American South.",
+      //     publishedYear: 1960,
+      //     pages: 324,
+      //     addedDate: "2024-01-10",
+      //   },
+      // ];
 
-      setFavorites(mockFavorites);
-      setFilteredFavorites(mockFavorites);
+      setFavorites(books);
+      setFilteredFavorites(books);
     } catch (error) {
       console.error("Error fetching favorites:", error);
     } finally {
@@ -106,7 +106,10 @@ export default function FavoriteBooks() {
     setFilteredFavorites(result);
   }, [searchQuery, selectedGenre, sortBy, favorites]);
 
-  const genres = ["all", ...new Set(favorites.map((book) => book.genre))];
+  const genres = [
+    "all",
+    ...new Set((favorites || []).map((book) => book.genre)),
+  ];
 
   const removeFavorite = (bookId) => {
     // Add API call to remove from favorites
@@ -234,13 +237,12 @@ export default function FavoriteBooks() {
         {filteredFavorites.length > 0 ? (
           <div className="grid grid-cols-1 gap-6">
             {filteredFavorites.map((book) => (
-              <div key={book.id} className="relative group">
+              <div key={book._id} className="relative group">
                 <BookCard book={book} />
-
                 {/* Remove from Favorites Button */}
                 <button
                   onClick={() => removeFavorite(book.id)}
-                  className="absolute top-6 right-6 bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110 z-10"
+                  className="absolute top-6 right-6 bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110 z-10 cursor-pointer"
                   title="Remove from favorites"
                 >
                   <Trash2 className="w-4 h-4" />

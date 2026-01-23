@@ -4,7 +4,7 @@ import { useContext } from "react";
 import { Star, Calendar, BookOpen, IndianRupee } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/userContext";
-import { favBook } from "../service/favService";
+import { favBook, fetchFavBooks } from "../service/favService";
 const API_URL = import.meta.env.VITE_API_URL;
 export default function BookCard({ book }) {
   const { user } = useContext(UserContext);
@@ -21,6 +21,9 @@ export default function BookCard({ book }) {
 
   const getBookId = async () => {
     try {
+      const favData = await fetchFavBooks();
+      console.log("fav data", favData);
+
       const data = await favBook(book.id); // ✅ pass ID only
       console.log("Favorite response:", data);
       alert(data.message);
@@ -138,7 +141,7 @@ export default function BookCard({ book }) {
             </button>
 
             <button
-              className="sm:w-auto px-4 py-2.5 border-2 border-red-400 text-red-500 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+              className="sm:w-auto px-4 py-2.5 border-2 border-red-400 text-red-500 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               onClick={getBookId}
             >
               <Star className="w-4 h-4" />

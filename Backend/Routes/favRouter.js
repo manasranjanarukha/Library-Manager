@@ -8,5 +8,6 @@ favItemsRouter.post(
   isAuthenticated,
   favItemController.addFavorite,
 );
+favItemsRouter.get("/stars", isAuthenticated, favItemController.fetchFavorites);
 
 module.exports = favItemsRouter;
