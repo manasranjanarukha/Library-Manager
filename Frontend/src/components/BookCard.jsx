@@ -1,38 +1,48 @@
 import React from "react";
 
 import { useContext } from "react";
-import { Star, Calendar, BookOpen, IndianRupee } from "lucide-react";
+import {
+  Star,
+  Calendar,
+  BookOpen,
+  IndianRupee,
+  Heart,
+  Trash2,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/userContext";
-import { favBook, fetchFavBooks } from "../service/favService";
+import { addFavBook } from "../service/favService";
+import { useFavorites } from "../context/FavoritesContext";
 const API_URL = import.meta.env.VITE_API_URL;
-export default function BookCard({ book }) {
+export default function BookCard({
+  book,
+  onFavoritePage,
+  // favoriteBooks,
+}) {
+  const { favoriteBooks, removeFavorite, addFavoriteLocal } = useFavorites();
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
 
-  const handleViewDetails = () => {
+  function handleViewDetails() {
     if (!user) {
       alert("Please login or Register");
       navigate("/auth/login");
     } else {
       navigate(`/book-items/${book.id}`);
     }
-  };
+  }
 
-  const getBookId = async () => {
-    try {
-      const favData = await fetchFavBooks();
-      console.log("fav data", favData);
+  // Heart Fill Logic
+  const isFavorite = favoriteBooks.some((fav) => fav._id === book.id);
 
-      const data = await favBook(book.id); // ✅ pass ID only
-      console.log("Favorite response:", data);
-      alert(data.message);
-
-      navigate(`/reader/${user?._id}/favorites`);
-    } catch (error) {
-      alert(error.message);
+  const toggleFavorite = () => {
+    if (isFavorite) {
+      removeFavorite(book.id);
+    } else {
+      addFavoriteLocal(book.id); // full object
     }
   };
+  // Handle The Favourite Heart UI
 
   // Helper function to render star rating
   const renderStars = (rating) => {
@@ -142,10 +152,25 @@ export default function BookCard({ book }) {
 
             <button
               className="sm:w-auto px-4 py-2.5 border-2 border-red-400 text-red-500 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-              onClick={getBookId}
+              onClick={toggleFavorite}
             >
-              <Star className="w-4 h-4" />
-              <span className="sm:hidden">Star</span>
+              {onFavoritePage ? (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  <span className="sm:hidden">Remove</span>
+                </>
+              ) : (
+                <>
+                  <Heart
+                    className={`w-4 h-4 ${
+                      isFavorite ? "fill-red-500 text-red-500" : "text-red-500"
+                    }`}
+                  />
+                  <span className="sm:hidden">
+                    {isFavorite ? "Favorited" : "Favorite"}
+                  </span>
+                </>
+              )}
             </button>
           </div>
         </div>

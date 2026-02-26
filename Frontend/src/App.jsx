@@ -9,6 +9,7 @@ import BookDetail from "./pages/BookDetail";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import { UserProvider } from "./context/userContext";
+import { FavoritesProvider } from "./context/FavoritesContext.jsx";
 import AddBookPage from "./pages/AddBookPage";
 import ProfilePage from "./pages/profilePage";
 import BookReader from "./pages/BookReader.jsx";
@@ -16,13 +17,15 @@ import FavoriteBooks from "./pages/FavoriteBooks.jsx";
 
 function App() {
   return (
-    <>
-      <UserProvider>
+    <UserProvider>
+      <FavoritesProvider>
         <Navbar />
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/login" element={<Login />} />
+
           <Route
             path="/books/add"
             element={
@@ -31,6 +34,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/edit-book/:id"
             element={
@@ -48,6 +52,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/authors/:authorId/books"
             element={
@@ -56,6 +61,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/me"
             element={
@@ -64,6 +70,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/:bookId/read"
             element={
@@ -72,6 +79,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/reader/:readerId/favorites"
             element={
@@ -81,8 +89,8 @@ function App() {
             }
           />
         </Routes>
-      </UserProvider>
-    </>
+      </FavoritesProvider>
+    </UserProvider>
   );
 }
 
