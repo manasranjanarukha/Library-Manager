@@ -9,5 +9,10 @@ favItemsRouter.post(
   favItemController.addFavorite,
 );
 favItemsRouter.get("/stars", isAuthenticated, favItemController.fetchFavorites);
+favItemsRouter.delete(
+  "/star/:id",
+  isAuthenticated,
+  favItemController.removeFavorite,
+);
 
 module.exports = favItemsRouter;

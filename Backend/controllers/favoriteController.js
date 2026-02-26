@@ -39,7 +39,6 @@ exports.fetchFavorites = async (req, res) => {
   try {
     const userId = req.user.id; // from auth middleware
     const favorites = await Favorite.find({ user: userId }).populate("book");
-    console.log(favorites);
 
     res.status(200).json({
       success: true,
@@ -47,6 +46,30 @@ exports.fetchFavorites = async (req, res) => {
     });
   } catch (error) {
     console.error("Fetch favorites error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.removeFavorite = async (req, res) => {
+  try {
+    const userId = req.user.id; // from auth middleware
+    const bookId = req.params.id; // from URL
+    console.log("bookid", bookId);
+    console.log("userId", userId);
+    const favorite = await Favorite.findOneAndDelete({
+      user: userId,
+      book: bookId,
+    });
+    if (!favorite) {
+      return res.status(404).json({ message: "Favorite not found" });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Book removed from favorites",
+      favorite,
+    });
+  } catch (error) {
+    console.error("Remove favorite error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
