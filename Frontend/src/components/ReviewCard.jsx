@@ -1,9 +1,8 @@
 export default function ReviewCard({ review }) {
   const { comment, createdAt, user = {} } = review;
-
+  const API_URL = import.meta.env.VITE_API_URL;
   const { fullName, profilePicture } = user;
-
-  // const fullName = review?.user?.fullName || "Anonymous";
+  console.log(user);
 
   // Generate initials from name for avatar fallback
   const getInitials = (name) => {
@@ -38,8 +37,12 @@ export default function ReviewCard({ review }) {
         <div className="flex-shrink-0">
           {profilePicture ? (
             <img
-              src={profilePicture}
-              alt={user}
+              src={
+                user.profilePicture
+                  ? `${API_URL}/uploads/users/profilePictures/${user.profilePicture}`
+                  : ""
+              }
+              alt={user.fullName || "User"}
               className="w-10 h-10 rounded-full object-cover"
             />
           ) : (

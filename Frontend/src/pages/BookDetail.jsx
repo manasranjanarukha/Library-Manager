@@ -53,6 +53,7 @@ export default function BookDetail() {
       alert(error.message);
     }
   };
+  console.log(reviews);
 
   if (!book) {
     return (

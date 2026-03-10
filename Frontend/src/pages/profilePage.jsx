@@ -100,7 +100,7 @@ export default function ProfilePage() {
                   className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-white shadow-lg object-cover bg-gray-200"
                   onError={(e) => {
                     e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      userData.fullName
+                      userData.fullName,
                     )}&size=200&background=4F46E5&color=fff`;
                   }}
                 />

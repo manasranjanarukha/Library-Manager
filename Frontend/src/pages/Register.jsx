@@ -7,10 +7,10 @@ function Register() {
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
     profilePicture: "",
-    fullName: "Manas Ranjan Behera",
-    email: "aaa@gmail.com",
-    password: "aaaaaa",
-    confirmPassword: "aaaaaa",
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
     userType: "",
     termsAccepted: false,
   });
@@ -51,7 +51,7 @@ function Register() {
         form.password,
         form.confirmPassword,
         form.userType,
-        form.termsAccepted
+        form.termsAccepted,
       );
 
       navigate("/auth/login");

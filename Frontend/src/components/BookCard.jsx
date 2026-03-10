@@ -31,9 +31,14 @@ export default function BookCard({
       navigate(`/book-items/${book.id}`);
     }
   }
+  const favoriteIds = new Set(favoriteBooks.map((f) => f._id));
+  console.log("favoriteIds:", favoriteIds);
+
+  console.log(favoriteBooks);
 
   // Heart Fill Logic
-  const isFavorite = favoriteBooks.some((fav) => fav._id === book.id);
+  const isFavorite = favoriteIds.has(book.id);
+  console.log(isFavorite);
 
   const toggleFavorite = () => {
     if (isFavorite) {
@@ -151,7 +156,7 @@ export default function BookCard({
             </button>
 
             <button
-              className="sm:w-auto px-4 py-2.5 border-2 border-red-400 text-red-500 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              className="sm:w-auto px-4 py-2.5 border-2 border-red-400 text-yellow-500 hover:bg-white hover:border-red-500 hover:text-yellow-500 rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               onClick={toggleFavorite}
             >
               {onFavoritePage ? (
@@ -163,7 +168,9 @@ export default function BookCard({
                 <>
                   <Heart
                     className={`w-4 h-4 ${
-                      isFavorite ? "fill-red-500 text-red-500" : "text-red-500"
+                      isFavorite
+                        ? "fill-red-500 text-red-500"
+                        : "text-red-500 hover:fill-red-500"
                     }`}
                   />
                   <span className="sm:hidden">

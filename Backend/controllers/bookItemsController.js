@@ -221,7 +221,7 @@ exports.deleteBookItem = async (req, res, next) => {
     }
 
     // 3. Delete the book from DB
-    await Book.findByIdAndDelete(bookId);
+    await Book.findByIdAndDeleted(bookId);
 
     // 4. Respond to client
     return res.status(200).json({ message: "Book deleted successfully" });
