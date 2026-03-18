@@ -13,7 +13,7 @@ const { default: mongoose } = require("mongoose");
 const app = express();
 
 // Local Module
-const rootDir = require("./Utils/pathUtil");
+const rootDir = require("./utils/pathUtil");
 const bookItemsRouter = require("./Routes/bookItemsRouter");
 const authRouter = require("./Routes/authRouter");
 const favRouter = require("./Routes/favRouter");
