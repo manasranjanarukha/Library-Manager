@@ -180,7 +180,7 @@ exports.deleteBookItem = async (req, res, next) => {
     // 1. Find the book
     const deletingBookCovers = await Book.findById(bookId);
     const deletingBookFiles = await Book.findById(bookId);
-    console.log("Deletong book", deletingBookFiles.bookFile);
+    console.log("Deleting book", deletingBookFiles.bookFile);
 
     if (!deletingBookCovers && !deletingBookFiles) {
       return res.status(404).json({ message: "Book not found" });
@@ -221,7 +221,7 @@ exports.deleteBookItem = async (req, res, next) => {
     }
 
     // 3. Delete the book from DB
-    await Book.findByIdAndDeleted(bookId);
+    await Book.findByIdAndDelete(bookId);
 
     // 4. Respond to client
     return res.status(200).json({ message: "Book deleted successfully" });

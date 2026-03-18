@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const Review = require("./review");
+const Favorite = require("./favorite");
 
 const bookSchema = new mongoose.Schema(
   {
@@ -52,8 +54,29 @@ const bookSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
+  console.log(this.model),
 );
+
+// CASCADE DELETE MIDDLEWARE
+bookSchema.pre("findOneAndDelete", async function (next) {
+  try {
+    console.log(this.model);
+
+    const book = await this.model.findOne(this.getFilter());
+
+    if (book) {
+      await Review.deleteMany({ book: book._id });
+      await Favorite.deleteMany({ book: book._id });
+
+      console.log("Deleted related reviews and favorites");
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 const Book = mongoose.model("Book", bookSchema);
 

@@ -15,7 +15,7 @@ export default function BookForm({ mode, bookId }) {
   const { user } = useContext(UserContext);
 
   const [formData, setFormData] = useState({
-    title: "Hello",
+    title: "Hello Manas Ramayana",
     author: "Ramayana",
     genre: "Romance",
     price: "499",
@@ -123,7 +123,7 @@ export default function BookForm({ mode, bookId }) {
           formData.description,
           parseFloat(formData.rating),
           parseInt(formData.pages),
-          parseInt(formData.publishedYear)
+          parseInt(formData.publishedYear),
         );
         navigate(`/authors/:${user.id}/books`);
         alert(`Book edited successfully!`);
@@ -138,7 +138,7 @@ export default function BookForm({ mode, bookId }) {
           formData.description,
           parseFloat(formData.rating),
           parseInt(formData.pages),
-          parseInt(formData.publishedYear)
+          parseInt(formData.publishedYear),
         );
         alert(data.message);
         setFormData({
