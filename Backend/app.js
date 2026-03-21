@@ -41,7 +41,8 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "10mb" }));
-app.set("trust proxy", 1); // 🔥 REQUIRED on Render
+app.set("trust proxy", 1);
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -51,8 +52,8 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24,
       httpOnly: true,
-      sameSite: "none", // 🔥 REQUIRED
-      secure: true, // 🔥 REQUIRED
+      sameSite: "none",
+      secure: true,
     },
   }),
 );
