@@ -51,8 +51,8 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24,
       httpOnly: true,
-      sameSite: "lax",
-      secure: false,
+      sameSite: "none", // 🔥 REQUIRED
+      secure: true, // 🔥 REQUIRED
     },
   }),
 );
