@@ -166,22 +166,33 @@ export default function NavBar() {
       </div>
 
       <DisclosurePanel className="sm:hidden">
-        <div className="space-y-1 px-2 pt-2 pb-3">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              to={item.to}
-              aria-current={location.pathname === item.to ? "page" : undefined}
-              className={classNames(
-                location.pathname === item.to
-                  ? "bg-gray-950/50 text-white" // active state
-                  : "text-gray-300 hover:bg-white/5 hover:text-white", // inactive
-                "block rounded-md px-3 py-2 text-base font-medium",
-              )}
-            >
-              {item.name}
-            </Link>
-          ))}
+        <div className="space-y-1 px-2 pt-2 pb-3 flex flex-col">
+          {user ? (
+            navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.to}
+                className="block rounded-md px-3 py-2 text-base font-medium"
+              >
+                {item.name}
+              </Link>
+            ))
+          ) : (
+            <>
+              <Link
+                to="/auth/login"
+                className="px-3 py-2 rounded-md text-sm lg:text-base font-medium hover:bg-blue-800 hover:text-blue-100 transition-all duration-200 transform hover:scale-105"
+              >
+                Login
+              </Link>
+              <Link
+                to="/auth/register"
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded-md text-sm lg:text-base font-medium transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg "
+              >
+                Register
+              </Link>
+            </>
+          )}
         </div>
       </DisclosurePanel>
     </Disclosure>
