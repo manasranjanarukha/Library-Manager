@@ -11,7 +11,7 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <img src="/public/book-loading.gif" alt="Loading book" />
+          <img src="/book-loading.gif" alt="Loading book" />
           <p className="mt-4 text-gray-600">Loading User</p>
         </div>
       </div>
