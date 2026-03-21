@@ -41,7 +41,7 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "10mb" }));
-
+app.set("trust proxy", 1); // 🔥 REQUIRED on Render
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
