@@ -4,6 +4,7 @@ import { createUserInServer } from "../service/userService";
 
 function Register() {
   let navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
     profilePicture: "",
@@ -19,14 +20,13 @@ function Register() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    // Handle file input separately for preview
     if (type === "file" && e.target.files[0]) {
       const file = e.target.files[0];
       setForm((prev) => ({
         ...prev,
         [name]: file,
       }));
-      // Create preview URL
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result);
@@ -42,23 +42,27 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setErrors({});
 
     try {
-      const result = await createUserInServer(
-        form.profilePicture,
-        form.fullName,
-        form.email,
-        form.password,
-        form.confirmPassword,
-        form.userType,
-        form.termsAccepted,
-      );
+      // ✅ FIX: Use FormData
+      const formData = new FormData();
+      formData.append("profilePicture", form.profilePicture);
+      formData.append("fullName", form.fullName);
+      formData.append("email", form.email);
+      formData.append("password", form.password);
+      formData.append("confirmPassword", form.confirmPassword);
+      formData.append("userType", form.userType);
+      formData.append("termsAccepted", form.termsAccepted);
 
+      await createUserInServer(formData);
+
+      // ✅ FIX: alert before navigate
+      alert("Registration successful!");
       navigate("/auth/login");
 
-      alert("Registration successful!");
-
-      // Clear form and errors
+      // Reset
       setForm({
         profilePicture: "",
         fullName: "",
@@ -75,11 +79,16 @@ function Register() {
 
       if (err.errors && err.errors.length > 0) {
         const newErrors = {};
-        err.errors.map((value) => {
+
+        // ✅ FIX: forEach instead of map
+        err.errors.forEach((value) => {
           newErrors[value.path] = value.msg;
         });
+
         setErrors(newErrors);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,7 +101,7 @@ function Register() {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <div className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Profile Picture - STYLED SECTION */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -292,12 +301,13 @@ function Register() {
             {/* Submit */}
             <button
               type="submit"
+              disabled={loading}
               onClick={handleSubmit}
               className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500"
             >
-              Register
+              {loading ? "Registering..." : "Register"}
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </div>
