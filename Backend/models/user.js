@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema(
   {
     profilePicture: {
       type: String, // store image URL
-      required: true,
+      required: false,
     },
     fullName: {
       type: String,
@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
     termsAccepted: { type: Boolean, default: false },
   },
 
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const User = mongoose.model("User", userSchema);

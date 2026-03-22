@@ -39,21 +39,27 @@ exports.register = [
   async (req, res) => {
     const errors = validationResult(req);
 
+    console.log("🔥 BODY:", req.body);
+    console.log("🔥 FILES:", req.files);
+
     const {
-      profilePicture,
       fullName,
       email,
-      confirmPassword,
       password,
+      confirmPassword,
       userType,
       termsAccepted,
     } = req.body;
 
     const allErrors = [];
-    if (!errors.isEmpty()) allErrors.push(...errors.array());
+
+    if (!errors.isEmpty()) {
+      allErrors.push(...errors.array());
+    }
 
     try {
       const existingUser = await User.findOne({ email });
+
       if (existingUser) {
         allErrors.push({ msg: "Email already registered", param: "email" });
       }
@@ -66,13 +72,13 @@ exports.register = [
 
       const user = new User({
         profilePicture: req.files?.profilePicture
-          ? req.files?.profilePicture[0]?.filename
+          ? req.files.profilePicture[0].filename
           : null,
         fullName,
         email,
         password: hashedPassword,
         userType,
-        termsAccepted,
+        termsAccepted: termsAccepted === "true", // ✅ FIX
       });
 
       await user.save();
@@ -82,8 +88,11 @@ exports.register = [
         message: "User registered successfully",
       });
     } catch (err) {
-      console.error(err);
-      return res.status(500).json({ success: false, message: "Server error" });
+      console.error("REGISTER ERROR:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+      });
     }
   },
 ];

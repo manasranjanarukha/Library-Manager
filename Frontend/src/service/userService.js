@@ -1,21 +1,17 @@
 const API_URL = import.meta.env.VITE_API_URL;
-export const createUserInServer = async (
-  profilePicture,
-  fullName,
-  email,
-  password,
-  confirmPassword,
-  userType,
-  termsAccepted
-) => {
+
+export const createUserInServer = async (form) => {
   const formData = new FormData();
-  formData.append("profilePicture", profilePicture);
-  formData.append("fullName", fullName);
-  formData.append("email", email);
-  formData.append("password", password);
-  formData.append("confirmPassword", confirmPassword);
-  formData.append("userType", userType);
-  formData.append("termsAccepted", termsAccepted);
+
+  formData.append("profilePicture", form.profilePicture);
+  formData.append("fullName", form.fullName);
+  formData.append("email", form.email);
+  formData.append("password", form.password);
+  formData.append("confirmPassword", form.confirmPassword);
+  formData.append("userType", form.userType);
+
+  // ✅ ensure correct type
+  formData.append("termsAccepted", form.termsAccepted ? "true" : "false");
 
   const response = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
@@ -23,15 +19,13 @@ export const createUserInServer = async (
     body: formData,
   });
 
-  const user = await response.json(); // parse JSON **before** throwing
+  const data = await response.json();
 
   if (!response.ok) {
-    // throw the actual backend response
-    throw user;
+    throw data;
   }
 
-  // return success response
-  return { status: response.status, ok: response.ok, user };
+  return data;
 };
 
 export const loginUserInServer = async (email, password) => {

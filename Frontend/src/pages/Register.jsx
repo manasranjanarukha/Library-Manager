@@ -8,10 +8,10 @@ function Register() {
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
     profilePicture: "",
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    fullName: "ddd",
+    email: "ss@gmail.com",
+    password: "aaaaaa",
+    confirmPassword: "aaaaaa",
     userType: "",
     termsAccepted: false,
   });
@@ -56,7 +56,7 @@ function Register() {
       formData.append("userType", form.userType);
       formData.append("termsAccepted", form.termsAccepted);
 
-      await createUserInServer(formData);
+      const res = await createUserInServer(form);
 
       // ✅ FIX: alert before navigate
       alert("Registration successful!");
@@ -302,7 +302,6 @@ function Register() {
             <button
               type="submit"
               disabled={loading}
-              onClick={handleSubmit}
               className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500"
             >
               {loading ? "Registering..." : "Register"}
