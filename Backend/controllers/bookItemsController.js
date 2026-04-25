@@ -1,46 +1,80 @@
 const { check, validationResult } = require("express-validator");
-const path = require("path");
-const fs = require("fs");
-const Book = require("../models/book");
 
+const Book = require("../models/book");
+const cloudinary = require("../config/cloudinaryConfig");
+const cleanupUploads = require("../utils/cloudinaryCleanup");
 exports.createBookItem = [
-  // Validation for body fields
   check("title")
     .trim()
     .notEmpty()
     .withMessage("Title is required")
     .isLength({ min: 2, max: 40 })
-    .withMessage("Title must be between 2 and 50 characters"),
+    .withMessage("Title must be between 2 and 40 characters"),
+
   check("author").trim().notEmpty().withMessage("Author is required"),
+
   check("genre").trim().notEmpty().withMessage("Genre is required"),
+
   check("price")
     .notEmpty()
     .withMessage("Price is required")
     .isNumeric()
     .withMessage("Price must be a positive number"),
+
   check("description")
     .notEmpty()
-    .withMessage("description is required")
+    .withMessage("Description is required")
     .trim()
     .isLength({ min: 10 })
     .withMessage("Description must be at least 10 characters"),
+
   check("rating")
     .optional()
     .isFloat({ min: 0, max: 5 })
     .withMessage("Rating must be between 0 and 5"),
+
   check("pages")
     .optional()
     .isInt({ min: 1 })
     .withMessage("Pages must be a positive number"),
+
   check("publishedYear")
     .optional()
     .isInt({ min: 1500, max: new Date().getFullYear() })
     .withMessage("Published year must be valid"),
 
-  // Controller logic
   async (req, res, next) => {
     const errors = validationResult(req);
+    const cover = req.files?.cover?.[0];
+    const bookFile = req.files?.bookFile?.[0];
 
+    let allErrors = [];
+
+    // 1️⃣ collect validation errors
+    if (!errors.isEmpty()) {
+      allErrors = [...errors.array()];
+    }
+
+    // 2️⃣ collect file errors
+    if (!cover) {
+      allErrors.push({ msg: "Cover is required", path: "cover" });
+    }
+
+    if (!bookFile) {
+      allErrors.push({ msg: "Book file is required", path: "bookFile" });
+    }
+
+    // 3️⃣ if any error → cleanup + return
+    if (allErrors.length > 0) {
+      await cleanupUploads(req.files);
+
+      return res.status(400).json({
+        success: false,
+        errors: allErrors,
+      });
+    }
+
+    // your existing logic continues...
     const {
       title,
       author,
@@ -51,28 +85,11 @@ exports.createBookItem = [
       pages,
       publishedYear,
     } = req.body;
-
-    const allErrors = [];
-    if (!errors.isEmpty()) {
-      await cleanupUploadedFiles(req);
-      allErrors.push(...errors.array());
-    }
     try {
-      if (allErrors.length > 0) {
-        return res.status(422).json({ success: false, errors: allErrors });
-      } else {
-      }
-      // 2️⃣ Check for required files
-      if (!req.files?.cover || !req.files?.bookFile) {
-        await cleanupUploadedFiles(req);
-        return res.status(400).json({
-          success: false,
-          message: "Both cover and bookFile are required.",
-        });
-      }
+      console.log("✅ STEP 4: All checks passed. Saving to Database...");
       const book = new Book({
-        cover: req.files?.cover ? req.files?.cover[0]?.filename : null,
-        bookFile: req.files?.bookFile ? req.files?.bookFile[0]?.filename : null,
+        cover: req.files?.cover?.[0]?.path || "",
+        bookFile: req.files?.bookFile?.[0]?.path || "",
         title,
         author,
         genre,
@@ -82,154 +99,262 @@ exports.createBookItem = [
         pages,
         publishedYear,
       });
+
       const savedBook = await book.save();
-      res.status(201).json({
+      console.log("🎉 STEP 5: Success response sent to user!");
+      return res.status(201).json({
         success: true,
         message: "Book created successfully",
         savedBook,
       });
     } catch (err) {
-      await cleanupUploadedFiles(req);
-      next(err);
-    }
-    // 🧹 Helper function for cleaning up uploaded files
-    async function cleanupUploadedFiles(req) {
-      if (req.files?.cover) {
-        for (const file of req.files.cover) {
-          fs.unlink(path.join("uploads/books/covers", file.filename), () => {});
-        }
-      }
-      if (req.files?.bookFile) {
-        for (const file of req.files.bookFile) {
-          fs.unlink(
-            path.join("uploads/books/bookFiles", file.filename),
-            () => {},
-          );
-        }
-      }
+      console.error("Error creating book:", err.message);
+      console.log("🔥 FULL ERROR OBJECT:", err);
+      console.log("🔥 ERROR SOURCE:", err.name);
+      console.log("🔥 ERROR MESSAGE:", err.message);
+      res.status(500).json({
+        success: false,
+        message: "Server error while creating book",
+      });
     }
   },
 ];
 
-exports.editBookItem = async (req, res, next) => {
+exports.editBookItem = [
+  // =========================
+  // 🧾 VALIDATION (OPTIONAL)
+  // =========================
+  check("title")
+    .optional()
+    .isLength({ min: 2, max: 40 })
+    .withMessage("Title must be between 2 and 40 characters"),
+
+  check("author")
+    .optional()
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("Author cannot be empty"),
+  check("genre").optional().notEmpty().withMessage("Genre cannot be empty"),
+
+  check("price").optional().isNumeric().withMessage("Price must be a number"),
+
+  check("description")
+    .optional()
+    .isLength({ min: 10 })
+    .withMessage("Description must be at least 10 characters"),
+
+  check("rating")
+    .optional()
+    .isFloat({ min: 0, max: 5 })
+    .withMessage("Rating must be between 0 and 5"),
+
+  check("pages")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Pages must be a positive number"),
+
+  check("publishedYear")
+    .optional()
+    .isInt({ min: 1500, max: new Date().getFullYear() })
+    .withMessage("Published year must be valid"),
+
+  // =========================
+  // 🚀 CONTROLLER
+  // =========================
+  async (req, res) => {
+    const errors = validationResult(req);
+
+    // ❌ If validation fails → cleanup uploaded files
+    if (!errors.isEmpty()) {
+      await cleanupUploads(req.files);
+
+      return res.status(422).json({
+        success: false,
+        errors: errors.array(),
+      });
+    }
+
+    try {
+      const bookId = req.params.id;
+
+      const existingBook = await Book.findById(bookId);
+
+      // ❌ If book not found → cleanup new uploads
+      if (!existingBook) {
+        await cleanupUploads(req.files);
+
+        return res.status(404).json({
+          success: false,
+          message: "Book not found",
+        });
+      }
+
+      let coverUrl = existingBook.cover;
+      let bookFileUrl = existingBook.bookFile;
+
+      // =========================
+      // 🖼️ COVER UPDATE
+      // =========================
+      if (req.files?.cover) {
+        // delete old cover
+        const oldCoverId = existingBook.cover
+          ?.split("/upload/")[1]
+          ?.replace(/v\d+\//, "")
+          ?.replace(/\.[^/.]+$/, "");
+
+        if (oldCoverId) {
+          await cloudinary.uploader.destroy(oldCoverId);
+          console.log("🧹 Deleted old cover");
+        }
+
+        coverUrl = req.files.cover[0].path;
+      }
+
+      // =========================
+      // 📄 BOOK FILE UPDATE
+      // =========================
+      if (req.files?.bookFile) {
+        const oldFileId = existingBook.bookFile
+          ?.split("/upload/")[1]
+          ?.replace(/v\d+\//, "")
+          ?.replace(/\.[^/.]+$/, "");
+
+        if (oldFileId) {
+          const isRaw = existingBook.bookFile.includes("/raw/upload/");
+
+          await cloudinary.uploader.destroy(oldFileId, {
+            resource_type: isRaw ? "raw" : "image",
+          });
+
+          console.log("🧹 Deleted old book file");
+        }
+
+        bookFileUrl = req.files.bookFile[0].path;
+      }
+
+      // =========================
+      // 🧾 UPDATE DB
+      // =========================
+      const updatedBook = await Book.findByIdAndUpdate(
+        bookId,
+        {
+          ...req.body,
+          cover: coverUrl,
+          bookFile: bookFileUrl,
+        },
+        { new: true, runValidators: true },
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Book updated successfully",
+        book: updatedBook,
+      });
+    } catch (err) {
+      // ❌ rollback new uploads if something fails
+      await cleanupUploads(req.files);
+
+      console.error("Error editing book:", err.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+      });
+    }
+  },
+];
+
+exports.deleteBookItem = async (req, res) => {
   try {
     const bookId = req.params.id;
+    console.log("book id", bookId);
 
-    // 1. Fetch existing book
+    // =========================
+    // 🔍 Find Book
+    // =========================
     const existingBook = await Book.findById(bookId);
 
     if (!existingBook) {
-      return res.status(404).json({ message: "Book not found" });
-    }
-
-    // 2. If new file uploaded, compute old image path
-
-    console.log("existingBook.cover:", existingBook.cover);
-    if (req.files?.cover) {
-      const oldImagePath = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        "books",
-        "covers",
-        existingBook.cover,
-      );
-      fs.unlink(oldImagePath, (err) => {
-        if (err) console.error("Error deleting old cover:", err);
+      return res.status(404).json({
+        success: false,
+        message: "Book not found",
       });
     }
 
-    if (req.files?.bookFile) {
-      const oldPdfPath = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        "books",
-        "bookFiles",
-        existingBook.bookFile,
-      );
-      fs.unlink(oldPdfPath, (err) => {
-        if (err) console.error("Error deleting old PDF:", err);
-      });
-    }
+    // same extraction pattern used elsewhere
+    const extractPublicId = (url) => {
+      if (!url) return null;
 
-    // 3. Build updates (keep old cover if no new file)
-    const updates = {
-      ...req.body,
-      cover: req.files?.cover?.[0]?.filename || existingBook.cover,
-      bookFile: req.files?.bookFile?.[0]?.filename || existingBook.bookFile,
+      try {
+        return url
+          .split("/upload/")[1]
+          .replace(/^v\d+\//, "") // removes v1777057005/
+          .replace(/\.[^/.]+$/, "");
+      } catch {
+        return null;
+      }
     };
 
-    // 4. Apply update
-    const book = await Book.findByIdAndUpdate(bookId, updates, {
-      new: true,
-      runValidators: true,
-    });
+    // =========================
+    // 🖼️ DELETE COVER
+    // =========================
+    if (existingBook.cover) {
+      try {
+        const coverId = extractPublicId(existingBook.cover);
+        console.log("cover id", coverId);
 
-    return res.status(200).json({ success: true, book });
-  } catch (err) {
-    console.error("Error editing book:", err.message);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
+        if (coverId) {
+          const cover = await cloudinary.uploader.destroy(coverId, {
+            resource_type: "image",
+          });
+          console.log("cover", cover);
 
-exports.deleteBookItem = async (req, res, next) => {
-  try {
-    const bookId = req.params.id;
-
-    // 1. Find the book
-    const deletingBookCovers = await Book.findById(bookId);
-    const deletingBookFiles = await Book.findById(bookId);
-    console.log("Deleting book", deletingBookFiles.bookFile);
-
-    if (!deletingBookCovers && !deletingBookFiles) {
-      return res.status(404).json({ message: "Book not found" });
+          console.log("🧹 Deleted cover");
+        }
+      } catch (err) {
+        console.error("Cover deletion failed:", err.message);
+      }
     }
 
-    // 2. Remove cover image from uploads if exists
-    if (deletingBookCovers.cover && deletingBookFiles.bookFile) {
-      const coverPath = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        "books",
-        "covers",
-        deletingBookCovers.cover,
-      );
-      const bookFilePath = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        "books",
-        "bookFiles",
-        deletingBookFiles.bookFile,
-      );
-      fs.unlink(coverPath, (err) => {
-        if (err) {
-          console.error("Failed to delete cover image:", err.message);
-        } else {
-          console.log("Cover image deleted:", coverPath);
+    // =========================
+    // 📄 DELETE BOOK FILE
+    // =========================
+    if (existingBook.bookFile) {
+      try {
+        const fileId = extractPublicId(existingBook.bookFile);
+        console.log("fileID", fileId);
+
+        const isRaw = existingBook.bookFile.includes("/raw/upload/");
+
+        if (fileId) {
+          const book = await cloudinary.uploader.destroy(fileId, {
+            resource_type: isRaw ? "raw" : "image",
+          });
+          console.log("book", book);
+          console.log("🧹 Deleted book file");
         }
-      });
-      fs.unlink(bookFilePath, (err) => {
-        if (err) {
-          console.error("Failed to delete book file:", err.message);
-        } else {
-          console.log("Book file deleted:", bookFilePath);
-        }
-      });
+      } catch (err) {
+        console.error("Book file deletion failed:", err.message);
+      }
     }
 
-    // 3. Delete the book from DB
+    // =========================
+    // 🗑️ DELETE DB RECORD
+    // =========================
     await Book.findByIdAndDelete(bookId);
 
-    // 4. Respond to client
-    return res.status(200).json({ message: "Book deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting book:", error.message);
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    return res.status(200).json({
+      success: true,
+      message: "Book deleted successfully",
+    });
+  } catch (err) {
+    console.error("Delete book error:", err.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while deleting book",
+    });
   }
 };
 

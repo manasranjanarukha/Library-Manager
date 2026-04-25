@@ -91,3 +91,12 @@ export const updateUserInServer = async (id, updatedData) => {
   }
   return { status: response.status, ok: response.ok, result };
 };
+
+export const deleteUserInServer = async (id) => {
+  const response = await fetch(`${API_URL}/auth/user/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  const result = await response.json();
+  console.log(result);
+};

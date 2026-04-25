@@ -1,6 +1,7 @@
 const { check, validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
+const {deleteUserWithDependencies}=require("../services/userService");
 
 exports.register = [
   // 1️⃣ Validation rules
@@ -244,4 +245,20 @@ exports.updateUser = async (req, res) => {
       message: "Server error during update",
     });
   }
+};
+exports.deleteUser = async (req, res) => {
+  console.log(req.params.id);
+  
+  try {
+    await deleteUserWithDependencies(req.params.id);
+
+    res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+  
 };

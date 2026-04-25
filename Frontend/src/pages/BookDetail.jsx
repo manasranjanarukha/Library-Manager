@@ -92,7 +92,7 @@ export default function BookDetail() {
                 {/* Book cover image with proper aspect ratio */}
                 <div className="relative w-full aspect-[3/4] sm:aspect-[2/3] lg:aspect-[3/4] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                   <img
-                    src={`${API_URL}/uploads/books/covers/${book.cover}`}
+                    src={book.cover}
                     alt={book.title}
                     className="absolute inset-0 w-full h-full object-cover"
                   />

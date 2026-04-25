@@ -12,16 +12,27 @@ export const addBookItemToServer = async (
   publishedYear,
 ) => {
   const formData = new FormData();
-  formData.append("bookFile", bookFile);
-  formData.append("cover", cover);
-  formData.append("title", title);
-  formData.append("author", author);
-  formData.append("genre", genre);
-  formData.append("price", price);
-  formData.append("description", description);
-  formData.append("rating", rating);
-  formData.append("pages", pages);
-  formData.append("publishedYear", publishedYear);
+
+  // 1. Guard text fields against undefined/null
+  if (title) formData.append("title", title);
+  if (author) formData.append("author", author);
+  if (genre) formData.append("genre", genre);
+  if (price) formData.append("price", price);
+  if (description) formData.append("description", description);
+  if (rating) formData.append("rating", rating);
+  if (pages) formData.append("pages", pages);
+  if (publishedYear) formData.append("publishedYear", publishedYear);
+
+  // 2. Only append if they are actual files!
+  if (cover instanceof File) {
+    formData.append("cover", cover);
+  }
+  if (bookFile instanceof File) {
+    formData.append("bookFile", bookFile);
+  }
+  for (let [key, value] of formData.entries()) {
+    console.log(key, value);
+  }
 
   const response = await fetch(`${API_URL}/book-items`, {
     method: "POST",
@@ -29,9 +40,9 @@ export const addBookItemToServer = async (
   });
 
   const data = await response.json();
+  console.log(data);
 
   if (!response.ok) {
-    // Throw backend errors (if any) instead of generic error
     throw data;
   }
 
@@ -52,16 +63,18 @@ export const editBookItemToServer = async (
   publishedYear,
 ) => {
   const formData = new FormData();
-  formData.append("title", title);
-  formData.append("author", author);
-  formData.append("genre", genre);
-  formData.append("price", price);
-  formData.append("description", description);
-  formData.append("rating", rating);
-  formData.append("pages", pages);
-  formData.append("publishedYear", publishedYear);
 
-  // Only append cover if it's a new file
+  // Guard against sending the string "undefined" or "null" for text fields
+  if (title) formData.append("title", title);
+  if (author) formData.append("author", author);
+  if (genre) formData.append("genre", genre);
+  if (price) formData.append("price", price);
+  if (description) formData.append("description", description);
+  if (rating) formData.append("rating", rating);
+  if (pages) formData.append("pages", pages);
+  if (publishedYear) formData.append("publishedYear", publishedYear);
+
+  // Only append cover if it's a new file (You nailed this part!)
   if (cover instanceof File) {
     formData.append("cover", cover);
   }
@@ -74,12 +87,15 @@ export const editBookItemToServer = async (
     method: "PUT",
     body: formData, // ✅ send as FormData
   });
-
-  if (!response.ok) {
-    throw new Error("Failed to edit item details");
-  }
+  console.log(formData);
 
   const data = await response.json();
+
+  if (!response.ok) {
+    // Throw the actual backend error so your UI can display it
+    throw data;
+  }
+
   return data;
 };
 

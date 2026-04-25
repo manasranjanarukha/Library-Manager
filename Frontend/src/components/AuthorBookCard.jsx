@@ -1,19 +1,33 @@
-import React from "react";
-import { Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import { Loader, Trash2 } from "lucide-react";
 import { Star, Calendar, BookOpen, IndianRupee, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { deleteBookFromServer } from "../service/bookService";
 
 const API_URL = import.meta.env.VITE_API_URL;
-export default function AuthorBookCard({ book }) {
+export default function AuthorBookCard({ book, onDelete }) {
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
   const handleEditDetails = () => {
     navigate(`/edit-book/${book.id}`);
   };
+  console.log("book", book);
 
   const handleDelete = async () => {
-    await deleteBookFromServer(book.id);
-    window.location.reload();
+    if (isDeleting) return;
+
+    if (!window.confirm("Delete this book?")) return;
+
+    try {
+      setIsDeleting(true);
+
+      await onDelete(book.id);
+    } catch (err) {
+      console.error(err);
+      alert("Delete failed");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Helper function to render star rating
@@ -56,7 +70,7 @@ export default function AuthorBookCard({ book }) {
             style={{ paddingTop: "150%" }}
           >
             <img
-              src={`${API_URL}/uploads/books/covers/${book.cover}`}
+              src={book.cover}
               alt={book.title}
               className="absolute inset-0 w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
             />
@@ -125,9 +139,19 @@ export default function AuthorBookCard({ book }) {
             <button
               className="sm:w-auto px-4 py-2.5 border-2 border-red-400 text-red-500 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               onClick={handleDelete}
+              disabled={isDeleting}
             >
-              <Trash2 className="w-4 h-4" />
-              <span className="sm:hidden">Delete</span>
+              {isDeleting ? (
+                <>
+                  <Loader className="w-4 h-4" />
+                  <span className="sm:hidden">Deleting</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  <span className="sm:hidden">Delete</span>
+                </>
+              )}
             </button>
           </div>
         </div>

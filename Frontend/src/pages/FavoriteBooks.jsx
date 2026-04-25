@@ -84,7 +84,7 @@ function FavBookCard({ book, index, view }) {
         {/* Cover */}
         <div className="flex-shrink-0 w-14 h-20 rounded-lg overflow-hidden bg-zinc-900 border border-white/10">
           <img
-            src={`${API_URL}/uploads/books/covers/${book.cover}`}
+            src={book.cover}
             alt={book.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -161,7 +161,7 @@ function FavBookCard({ book, index, view }) {
         style={{ paddingTop: "140%" }}
       >
         <img
-          src={`${API_URL}/uploads/books/covers/${book.cover}`}
+          src={book.cover}
           alt={book.title}
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />

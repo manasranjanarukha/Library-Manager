@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Review = require("./review");
 const Favorite = require("./favorite");
+const User=require("./user")
 
 const bookSchema = new mongoose.Schema(
   {
@@ -53,9 +54,10 @@ const bookSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    
   },
   { timestamps: true },
-  console.log(this.model),
+
 );
 
 // CASCADE DELETE MIDDLEWARE

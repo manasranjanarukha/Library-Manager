@@ -19,6 +19,8 @@ export default function BookCard({
   onFavoritePage,
   // favoriteBooks,
 }) {
+  console.log(book);
+
   const { favoriteBooks, removeFavorite, addFavoriteLocal } = useFavorites();
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
@@ -31,6 +33,8 @@ export default function BookCard({
       navigate(`/book-items/${book.id}`);
     }
   }
+  console.log(favoriteBooks);
+
   const favoriteIds = new Set(favoriteBooks.map((f) => f._id));
   console.log("favoriteIds:", favoriteIds);
 
@@ -89,7 +93,7 @@ export default function BookCard({
             style={{ paddingTop: "150%" }}
           >
             <img
-              src={`${API_URL}/uploads/books/covers/${book.cover}`}
+              src={book.cover}
               alt={book.title}
               className="absolute inset-0 w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
             />

@@ -2,16 +2,15 @@ const express = require("express");
 const bookItemsRouter = express.Router();
 const upload = require("../middlewares/upload");
 const isAuthenticated = require("../middlewares/auth");
+const handleUpload = require("../middlewares/uploadHandler");
 
 const bookItemsController = require("../controllers/bookItemsController");
 
 bookItemsRouter.post(
   "/",
   // isAuthenticated,
-  upload.fields([
-    { name: "cover", maxCount: 1 },
-    { name: "bookFile", maxCount: 1 },
-  ]),
+  handleUpload,
+
   bookItemsController.createBookItem,
 );
 

@@ -47,8 +47,8 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24,
       httpOnly: true,
-      sameSite: "none",
-      secure: true,
+      sameSite: "lax",
+      secure: false,
     },
   }),
 );
@@ -57,6 +57,15 @@ app.use("/book-items", bookItemsRouter);
 app.use("/auth", authRouter);
 app.use("/favorites", favRouter);
 app.use("/reviews", reviewItemsRouter);
+// 🔥 ADD THIS BLOCK HERE (IMPORTANT)
+app.use((err, req, res, next) => {
+  console.error("🔥 Server Error:", err);
+
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
+});
 
 const port = process.env.PORT;
 

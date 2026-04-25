@@ -31,9 +31,9 @@ export default function Login() {
 
       navigate(
         loggedInUser.userType === "Author"
-          ? `/authors/${loggedInUser.id}/books`
+          ? `/authors/${loggedInUser?.id}/books`
           : "/",
-        { replace: true }
+        { replace: true },
       );
 
       setForm({ email: "", password: "" });
@@ -41,7 +41,7 @@ export default function Login() {
       alert(
         err?.errors
           ? err.errors.map((e) => e.msg).join("\n")
-          : err?.message || "Login failed"
+          : err?.message || "Login failed",
       );
     } finally {
       setLoading(false);

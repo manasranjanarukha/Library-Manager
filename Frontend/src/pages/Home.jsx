@@ -28,6 +28,13 @@ export default function Home() {
       </div>
     );
   }
+  if (!books || books.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-lg text-gray-600">No books found 📭</p>
+      </div>
+    );
+  }
   return (
     <div className="max-w-7xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">📚 Available Books</h1>

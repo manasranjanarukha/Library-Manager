@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { updateUserInServer } from "../service/userService";
+import { deleteUserInServer } from "../service/userService";
 import { useContext } from "react";
 import { UserContext } from "../context/userContext";
 const API_URL = import.meta.env.VITE_API_URL;
@@ -70,6 +71,14 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
+  const deleteProfile = async () => {
+    console.log(user);
+    
+const data=await deleteUserInServer(user._id);
+console.log(data);
+
+
+  };
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -120,7 +129,15 @@ export default function ProfilePage() {
                   {userData.userType}
                 </p>
               </div>
-
+              <button
+                onClick={deleteProfile}
+                className="mt-4 sm:mt-0 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 bg-red-600 text-white hover:bg-indigo-700 cursor-pointer"
+              >
+                <>
+                  <Edit2 className="w-4 h-4" />
+                  Delete Profile
+                </>
+              </button>
               <button
                 onClick={isEditing ? handleCancel : handleEdit}
                 className="mt-4 sm:mt-0 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700"

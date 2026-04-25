@@ -8,15 +8,22 @@ import { UserContext } from "../context/userContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 const API_URL = import.meta.env.VITE_API_URL;
+import * as pdfjsLib from "pdfjs-dist";
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 export default function BookForm({ mode, bookId }) {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const { user } = useContext(UserContext);
-
+  const publishedYear = new Date().getFullYear();
+  const author = user?.fullName;
   const [formData, setFormData] = useState({
-    title: "Hello Manas Ramayana",
-    author: "Ramayana",
+    title: "Huihufrhierfrhierferih",
+    author: author,
     genre: "Romance",
     price: "499",
     description: "This is a book description for readymate",
@@ -24,8 +31,12 @@ export default function BookForm({ mode, bookId }) {
     bookFile: "",
     rating: "4.9",
     pages: "10",
-    publishedYear: "2023",
+    publishedYear: publishedYear,
   });
+
+  useEffect(() => {
+    console.log("✅ Updated formData:", formData);
+  }, [formData]);
   const [previewUrl, setPreviewUrl] = useState(null);
   useEffect(() => {
     async function fetchData() {
@@ -33,7 +44,7 @@ export default function BookForm({ mode, bookId }) {
         const fetchedData = await bookDetailFromServer(bookId);
 
         setFormData(fetchedData);
-        setPreviewUrl(`${API_URL}/uploads/books/covers/${fetchedData.cover}`);
+        setPreviewUrl(fetchedData.cover);
       }
     }
     fetchData();
@@ -81,35 +92,70 @@ export default function BookForm({ mode, bookId }) {
   ];
 
   // handle input changes
-  const handleChange = (e) => {
-    const { name, value, files, type } = e.target;
+  const handleChange = async (e) => {
+    const { name, type, value, files } = e.target;
 
-    if (type === "file" && name === "cover" && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFormData((prev) => ({
-        ...prev,
-        [name]: file,
-      }));
-      // Create preview URL
-      const reader = new FileReader();
-      console.log(reader);
+    if (type === "file") {
+      const file = files?.[0];
+      if (!file) return;
 
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result);
-      };
-      reader.readAsDataURL(file);
-    } else if (name === "bookFile") {
-      // If it's the file input → store the file object
-      setFormData({ ...formData, bookFile: files[0] });
-    } else {
-      // For text/number inputs → store normal value
-      setFormData({ ...formData, [name]: value });
+      // COVER IMAGE
+      if (name === "cover") {
+        const reader = new FileReader();
+
+        reader.onloadend = () => {
+          setPreviewUrl(reader.result);
+        };
+
+        reader.readAsDataURL(file);
+
+        setFormData((prev) => ({
+          ...prev,
+          cover: file,
+        }));
+
+        return;
+      }
+
+      // PDF BOOK FILE
+      if (name === "bookFile") {
+        try {
+          const buffer = await file.arrayBuffer();
+
+          const pdf = await pdfjsLib.getDocument({
+            data: buffer,
+          }).promise;
+
+          const detectedPages = pdf.numPages;
+
+          setFormData((prev) => ({
+            ...prev,
+            bookFile: file,
+            pages: detectedPages.toString(), // auto-fill pages
+          }));
+
+          console.log("PDF Pages:", detectedPages);
+        } catch (err) {
+          console.error("Invalid PDF:", err);
+          alert("Could not read PDF");
+        }
+
+        return;
+      }
     }
+
+    // normal text inputs
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   // handle submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // 🚨 Prevent multiple submission
+    setIsSubmitting(true);
     try {
       if (mode === "edit") {
         const editData = await editBookItemToServer(
@@ -141,6 +187,7 @@ export default function BookForm({ mode, bookId }) {
           parseInt(formData.publishedYear),
         );
         alert(data.message);
+
         setFormData({
           title: "",
           author: "",
@@ -157,8 +204,8 @@ export default function BookForm({ mode, bookId }) {
         setErrors({});
       }
     } catch (err) {
-      console.error("❌ Error creating book:", err.message);
-      alert("Failed to add book", errors);
+      console.error("❌ Error creating book:", err);
+      alert(err.message);
       if (err.errors && err.errors.length > 0) {
         const newErrors = {};
         err.errors.map((value) => {
@@ -166,6 +213,8 @@ export default function BookForm({ mode, bookId }) {
         });
         setErrors(newErrors);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -181,6 +230,9 @@ export default function BookForm({ mode, bookId }) {
             {mode === "edit"
               ? " Edit Book Cover Photo"
               : "Upload Book Cover Photo"}
+            <span className="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-600 rounded">
+              Max 10MB
+            </span>
           </label>
           <div className="flex items-center space-x-4">
             {/* Preview Circle */}
@@ -245,21 +297,23 @@ export default function BookForm({ mode, bookId }) {
             <p className="mt-2 text-sm text-red-600">{errors.cover}</p>
           )}
         </div>
-        <label className="flex font-medium m-0">
+        <label className="flex items-center font-medium m-0">
           {mode === "edit" ? "Edit Book File" : "Upload Book File"}
+          <span className="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-600 rounded">
+            Max 10MB
+          </span>
         </label>
         <div>
-          {mode === "edit" && formData.bookFile && (
+          {/* {mode === "edit" && formData.bookFile && (
             <a
-              href={`${API_URL}/uploads/books/bookFiles/${formData.bookFile}`}
+              href={formData.bookFile}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 underline"
             >
               View / Download Book PDF
             </a>
-          )}
-
+          )} */}
           <input
             type="file"
             name="bookFile"
@@ -268,7 +322,24 @@ export default function BookForm({ mode, bookId }) {
             required={mode === "add"}
             className="w-full p-2 border rounded"
           />
+          {errors.bookFile && (
+            <p className="mt-2 text-sm text-red-600">{errors.bookFile}</p>
+          )}
         </div>
+        <label htmlFor="title" className="flex font-medium m-0">
+          {mode === "edit" ? "Edit Title" : "Add Title"}
+          <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded">
+            2–40 chars
+          </span>
+        </label>
+        <input
+          type="text"
+          name="title"
+          placeholder="Book Title"
+          value={formData.title}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
         {errors.title && <p className="text-red-600">{errors.title}</p>}
         <label htmlFor="author" className="flex font-medium m-0">
           {mode === "edit" ? "Edit Author" : "Add Author"}
@@ -302,6 +373,9 @@ export default function BookForm({ mode, bookId }) {
         {errors.genre && <p className="text-red-600">{errors.genre}</p>}
         <label htmlFor="price" className="flex font-medium m-0">
           {mode === "edit" ? "Edit Price" : "Add Price"}
+          <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded">
+            Numeric only
+          </span>
         </label>
         <input
           type="number"
@@ -314,6 +388,9 @@ export default function BookForm({ mode, bookId }) {
         {errors.price && <p className="text-red-600">{errors.price}</p>}
         <label htmlFor="description" className="flex font-medium m-0">
           {mode === "edit" ? "Edit Description" : "Add Description"}
+          <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded">
+            Min 10 chars
+          </span>
         </label>
         <textarea
           name="description"
@@ -348,6 +425,7 @@ export default function BookForm({ mode, bookId }) {
           value={formData.pages}
           onChange={handleChange}
           className="w-full p-2 border rounded"
+          readOnly
         />
         {errors.pages && <p className="text-red-600">{errors.pages}</p>}
         <label htmlFor="publishedYear" className="flex font-medium m-0">
@@ -360,15 +438,23 @@ export default function BookForm({ mode, bookId }) {
           value={formData.publishedYear}
           onChange={handleChange}
           className="w-full p-2 border rounded"
+          readOnly
         />
         {errors.publishedYear && (
           <p className="text-red-600">{errors.publishedYear}</p>
         )}
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+          disabled={isSubmitting} // 🚨 Prevents double-clicking
+          className={`px-4 py-2 rounded text-white w-full ${
+            isSubmitting ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+          }`}
         >
-          {mode === "edit" ? "Update Book" : "Add Book"}
+          {isSubmitting
+            ? "Uploading..."
+            : mode === "edit"
+              ? "Update Book"
+              : "Add Book"}
         </button>
       </form>
     </>

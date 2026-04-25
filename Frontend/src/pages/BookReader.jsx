@@ -331,7 +331,7 @@ export default function BookReader() {
         <div className="bg-white shadow-2xl rounded-lg overflow-hidden w-full max-w-5xl">
           <div className="overflow-auto max-h-[calc(100vh-200px)] sm:max-h-[calc(100vh-180px)]">
             <Document
-              file={`${API_URL}/uploads/books/bookFiles/${books?.bookFile}`}
+              file={books?.bookFile}
               onLoadSuccess={onDocumentLoadSuccess}
               loading={
                 <div className="flex items-center justify-center p-12">

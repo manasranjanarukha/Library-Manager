@@ -23,13 +23,14 @@ export default function NavBar() {
   const role = user?.userType?.toLowerCase();
   const authorNavigation = [
     { name: "Add Book", to: "/books/add", current: true },
-    { name: "My Book", to: `/authors/:${user?.id}/books`, current: false },
+    { name: "My Book", to: `/authors/${user?._id}/books`, current: false },
   ];
+  console.log(user);
 
   const readerNavigation = [
     {
       name: "Favorite Book",
-      to: `reader/:${user?._id}/favorites`,
+      to: `reader/${user?._id}/favorites`,
       current: true,
     },
   ];
@@ -61,7 +62,7 @@ export default function NavBar() {
               <div className="flex shrink-0 items-center">
                 <img
                   alt="Company"
-                  src="https://i.pinimg.com/originals/f4/cf/ec/f4cfec4f3b4bbf24798b26aa4a5508f2.png"
+                  src="/public/company-Logo.png"
                   className="h-8 w-auto"
                 />
               </div>
@@ -118,9 +119,9 @@ export default function NavBar() {
             {/* Profile dropdown */}
             {user ? (
               <Menu as="div" className="relative ml-3">
-                <MenuButton className="relative flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
+                <MenuButton className="relative flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 cursor-pointer">
                   <span className="absolute -inset-1.5" />
-                  <span className="sr-only">Open user menu</span>
+                  <span className="sr-only ">Open user menu</span>
                   <img
                     alt={user?.fullName}
                     src={
@@ -136,13 +137,13 @@ export default function NavBar() {
                   transition
                   className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-800 py-1 outline -outline-offset-1 outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
                 >
-                  <div className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden">
+                  <div className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden cursor-pointer">
                     Hello, {user?.fullName}
                   </div>
                   <MenuItem>
                     <Link
                       to={"/me"}
-                      className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden"
+                      className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden cursor-pointer"
                     >
                       Your profile
                     </Link>
@@ -151,7 +152,7 @@ export default function NavBar() {
                   <MenuItem>
                     <button
                       onClick={logout}
-                      className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden cursor-pointer w-full text-left hover:bg-red-600"
+                      className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden cursor-pointer w-full text-left hover:bg-red-600 cursor-pointer"
                     >
                       Logout
                     </button>
