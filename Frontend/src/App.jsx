@@ -1,33 +1,47 @@
-import "./index.css";
-import Navbar from "./components/NavBar";
-import ProtectedRoute from "./components/ProtectRoute";
-import AuthorHomePage from "./pages/AuthorHomePage";
-import Home from "./pages/Home";
+// React
+import { lazy, Suspense } from "react";
+
+// Router
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import EditBookPage from "./pages/EditBookPage";
-import BookDetail from "./pages/BookDetail";
+
+// Components
+import Navbar from "./components/navBar/NavBar.jsx";
+import ProtectedRoute from "./components/ProtectRoute";
+
+// Pages
+import Home from "./pages/Home";
 import Register from "./pages/Register";
-import Login from "./pages/Login";
-import { UserProvider } from "./context/userContext";
-import { FavoritesProvider } from "./context/FavoritesContext.jsx";
+import AuthorDashboardPage from "./pages/AuthorDashboardPage";
+import EditBookPage from "./pages/EditBookPage";
 import AddBookPage from "./pages/AddBookPage";
 import ProfilePage from "./pages/profilePage";
 import BookReader from "./pages/BookReader.jsx";
-import FavoriteBooks from "./pages/FavoriteBooks.jsx";
+
+// Lazy Loaded Pages
+const BookDetail = lazy(() => import("./pages/BookDetail"));
+const SaveForLater = lazy(() => import("./pages/SaveForLater"));
+const Login = lazy(() => import("./pages/Login"));
+const ForgetPassword = lazy(() => import("./pages/ForgetPassword"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+
+// Contexts
+import { UserProvider } from "./context/userContext";
+import { SaveForLaterProvider } from "./context/SaveForLaterContext.jsx";
 
 function App() {
   return (
     <UserProvider>
-      <FavoritesProvider>
+      <SaveForLaterProvider>
         <Navbar />
 
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/forgot-password" element={<ForgetPassword />} />
 
           <Route
-            path="/books/add"
+            path=":id/books/add"
             element={
               <ProtectedRoute>
                 <AddBookPage />
@@ -48,7 +62,9 @@ function App() {
             path="/book-items/:id"
             element={
               <ProtectedRoute allowedRoles={["Reader"]}>
-                <BookDetail />
+                <suspense fallback={<div>Loading...</div>}>
+                  <BookDetail />
+                </suspense>
               </ProtectedRoute>
             }
           />
@@ -57,7 +73,7 @@ function App() {
             path="/authors/:authorId/books"
             element={
               <ProtectedRoute>
-                <AuthorHomePage />
+                <AuthorDashboardPage />
               </ProtectedRoute>
             }
           />
@@ -72,7 +88,7 @@ function App() {
           />
 
           <Route
-            path="/:bookId/read"
+            path="book/:id/read"
             element={
               <ProtectedRoute>
                 <BookReader />
@@ -81,15 +97,22 @@ function App() {
           />
 
           <Route
-            path="/reader/:readerId/favorites"
+            path="/reader/:readerId/save-for-later"
             element={
               <ProtectedRoute allowedRoles={["Reader"]}>
-                <FavoriteBooks />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <SaveForLater />
+                </Suspense>
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/book-items/categories/:genre"
+            element={<CategoryPage />}
+          />
         </Routes>
-      </FavoritesProvider>
+      </SaveForLaterProvider>
     </UserProvider>
   );
 }

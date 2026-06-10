@@ -1,5 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL;
-export const submitReviewToServer = async (bookId, userId, comment) => {
+export const submitReviewToServer = async (bookId, userId, comment, rating) => {
   const response = await fetch(`${API_URL}/reviews`, {
     method: "POST",
     headers: {
@@ -9,6 +9,7 @@ export const submitReviewToServer = async (bookId, userId, comment) => {
       bookId: bookId,
       comment: comment,
       userId: userId,
+      rating: rating,
     }),
   });
   const data = await response.json();

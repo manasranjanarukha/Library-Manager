@@ -1,316 +1,239 @@
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { AlertCircle, BookOpen, Check, Loader2, UserPlus } from "lucide-react";
 import { createUserInServer } from "../service/userService";
+import PageMeta from "../components/PageMeta";
+import useRegisterForm from "../hooks/useRegisterForm";
+import Field from "../components/Register/Field";
+import Input from "../components/Register/Input";
+import AvatarUpload from "../components/Register/AvatarUpload";
+import PasswordInput from "../components/Register/PasswordInput";
+import UserTypeSelector from "../components/Register/UserTypeSelector";
 
-function Register() {
-  let navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [form, setForm] = useState({
-    profilePicture: "",
-    fullName: "ddd",
-    email: "ss@gmail.com",
-    password: "aaaaaa",
-    confirmPassword: "aaaaaa",
-    userType: "",
-    termsAccepted: false,
-  });
-  const [previewUrl, setPreviewUrl] = useState(null);
+/* ══════════════════════════════════════════════════
+   Account type selector cards
+══════════════════════════════════════════════════ */
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    if (type === "file" && e.target.files[0]) {
-      const file = e.target.files[0];
-      setForm((prev) => ({
-        ...prev,
-        [name]: file,
-      }));
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setForm((prev) => ({
-        ...prev,
-        [name]: type === "checkbox" ? checked : value,
-      }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrors({});
-
-    try {
-      // ✅ FIX: Use FormData
-      const formData = new FormData();
-      formData.append("profilePicture", form.profilePicture);
-      formData.append("fullName", form.fullName);
-      formData.append("email", form.email);
-      formData.append("password", form.password);
-      formData.append("confirmPassword", form.confirmPassword);
-      formData.append("userType", form.userType);
-      formData.append("termsAccepted", form.termsAccepted);
-
-      const res = await createUserInServer(form);
-
-      // ✅ FIX: alert before navigate
-      alert("Registration successful!");
-      navigate("/auth/login");
-
-      // Reset
-      setForm({
-        profilePicture: "",
-        fullName: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        userType: "",
-        termsAccepted: false,
-      });
-      setPreviewUrl(null);
-      setErrors({});
-    } catch (err) {
-      console.log("Validation failed from backend:", err);
-
-      if (err.errors && err.errors.length > 0) {
-        const newErrors = {};
-
-        // ✅ FIX: forEach instead of map
-        err.errors.forEach((value) => {
-          newErrors[value.path] = value.msg;
-        });
-
-        setErrors(newErrors);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function Register() {
+  const { form, errors, loading, handleChange, handleSubmit, previewUrl } =
+    useRegisterForm();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-          <p className="mt-2 text-sm text-gray-600">Sign up to get started</p>
-        </div>
+    <>
+      <PageMeta
+        title="Create Your Account"
+        description="Join Readymate to explore books, build your reading list, share reviews, and publish your work as an author."
+        keywords="register, sign up, reader, author, books, reading platform, book reviews, publish books"
+      />
 
-        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Profile Picture - STYLED SECTION */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Profile Picture
-              </label>
-              <div className="flex items-center space-x-4">
-                {/* Preview Circle */}
-                <div className="flex-shrink-0">
-                  <div className="h-20 w-20 rounded-full bg-gray-100 border-2 border-gray-300 overflow-hidden flex items-center justify-center">
-                    {previewUrl ? (
-                      <img
-                        src={previewUrl}
-                        alt="Preview"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <svg
-                        className="h-10 w-10 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fadeUp 0.4s ease both; }
+      `}</style>
 
-                {/* Upload Button */}
-                <div className="flex-1">
-                  <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
-                    <svg
-                      className="h-5 w-5 mr-2 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    Choose Photo
-                    <input
-                      type="file"
-                      name="profilePicture"
-                      accept="image/jpg,image/jpeg,image/png"
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                  </label>
-                  <p className="mt-1 text-xs text-gray-500">
-                    JPG, JPEG or PNG. Max 5MB.
-                  </p>
-                </div>
-              </div>
-              {errors.profilePicture && (
-                <p className="mt-2 text-sm text-red-600">
-                  {errors.profilePicture}
-                </p>
-              )}
-            </div>
-
-            {/* Full Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="fullName"
-                value={form.fullName}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500"
-              />
-              {errors.fullName && (
-                <p className="text-red-600">{errors.fullName}</p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500"
-              />
-              {errors.email && <p className="text-red-600">{errors.email}</p>}
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500"
-              />
-              {errors.password && (
-                <p className="text-red-600">{errors.password}</p>
-              )}
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500"
-              />
-              {errors.confirmPassword && (
-                <p className="text-red-600">{errors.confirmPassword}</p>
-              )}
-            </div>
-
-            {/* User Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Account Type
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name="userType"
-                    value="Reader"
-                    checked={form.userType === "Reader"}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-green-600"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    Reader
-                  </span>
-                </label>
-                <label className="flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name="userType"
-                    value="Author"
-                    checked={form.userType === "Author"}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-green-600"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    Author
-                  </span>
-                </label>
-              </div>
-              {errors.userType && (
-                <p className="text-red-600">{errors.userType}</p>
-              )}
-            </div>
-
-            {/* Terms */}
-            <div>
-              <label className="flex items-start space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="termsAccepted"
-                  checked={form.termsAccepted}
-                  onChange={handleChange}
-                  className="mt-1 h-4 w-4 text-green-600"
-                />
-                <span className="text-sm text-gray-600">
-                  I agree to the{" "}
-                  <a href="/terms" className="text-green-600 underline">
-                    Terms & Conditions
-                  </a>
-                </span>
-              </label>
-              {errors.termsAccepted && (
-                <p className="text-red-600">{errors.termsAccepted}</p>
-              )}
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500"
+      {/* Page background */}
+      <div className="min-h-screen bg-[#F8FAFC] px-4 py-10 sm:px-6 sm:py-14 lg:py-16">
+        <div className="mx-auto w-full max-w-lg fade-up">
+          {/* ── Logo / brand row ── */}
+          <div className="mb-6 flex items-center justify-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-700 text-white shadow-sm">
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span
+              className="text-lg font-semibold tracking-tight text-slate-800"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
             >
-              {loading ? "Registering..." : "Register"}
-            </button>
-          </form>
+              Ready<span className="text-teal-700">mate</span>
+            </span>
+          </div>
+
+          {/* ── Form card ── */}
+          <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+            {/* Card header */}
+            <div className="border-b border-slate-100 px-6 py-5 sm:px-8">
+              <h1 className="text-xl font-bold text-slate-800 sm:text-2xl">
+                Create an account
+              </h1>
+              <p className="mt-1 text-sm text-slate-400">
+                Join thousands of readers and authors on Readymate
+              </p>
+            </div>
+
+            {/* Form body */}
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="flex flex-col gap-5 px-6 py-6 sm:px-8 sm:py-7"
+            >
+              {/* ── Profile photo ── */}
+              <AvatarUpload
+                previewUrl={previewUrl}
+                error={errors.profilePicture}
+                onChange={handleChange}
+              />
+
+              {/* ── Full name ── */}
+              <Field label="Full name" required error={errors.fullName}>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  value={form.fullName}
+                  onChange={handleChange}
+                  placeholder="Your full name"
+                  error={errors.fullName}
+                  autoComplete="name"
+                />
+              </Field>
+
+              {/* ── Email ── */}
+              <Field label="Email address" required error={errors.email}>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="you@email.com"
+                  error={errors.email}
+                  autoComplete="email"
+                />
+              </Field>
+
+              {/* ── Password + Confirm — side by side on sm+ ── */}
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <Field label="Password" required error={errors.password}>
+                  <PasswordInput
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="Min. 8 characters"
+                    error={errors.password}
+                  />
+                </Field>
+                <Field
+                  label="Confirm password"
+                  required
+                  error={errors.confirmPassword}
+                >
+                  <PasswordInput
+                    name="confirmPassword"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Re-enter password"
+                    error={errors.confirmPassword}
+                  />
+                </Field>
+              </div>
+
+              {/* ── Account type ── */}
+              <Field label="Account type" required error={errors.userType}>
+                <UserTypeSelector
+                  value={form.userType}
+                  onChange={handleChange}
+                  error={errors.userType}
+                />
+              </Field>
+
+              {/* ── Terms ── */}
+              <div>
+                <label
+                  className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 transition-colors hover:bg-slate-100 sm:p-4"
+                  htmlFor="terms"
+                >
+                  {/* Custom checkbox */}
+                  <span
+                    className={[
+                      "mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border-2 transition-all duration-150",
+                      form.termsAccepted
+                        ? "border-teal-600 bg-teal-600"
+                        : "border-slate-300 bg-white",
+                    ].join(" ")}
+                    aria-hidden="true"
+                  >
+                    {form.termsAccepted && (
+                      <Check
+                        className="h-2.5 w-2.5 text-white"
+                        strokeWidth={3}
+                      />
+                    )}
+                  </span>
+                  <input
+                    type="checkbox"
+                    name="termsAccepted"
+                    id="terms"
+                    checked={form.termsAccepted}
+                    onChange={handleChange}
+                    className="sr-only"
+                    aria-required="true"
+                  />
+                  <p className="text-xs leading-relaxed text-slate-500 sm:text-sm">
+                    I agree to the{" "}
+                    <Link
+                      to="/terms"
+                      className="font-semibold text-teal-700 hover:underline"
+                    >
+                      Terms &amp; Conditions
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      to="/privacy"
+                      className="font-semibold text-teal-700 hover:underline"
+                    >
+                      Privacy Policy
+                    </Link>
+                  </p>
+                </label>
+                {errors.termsAccepted && (
+                  <p
+                    role="alert"
+                    className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-red-600"
+                  >
+                    <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                    {errors.termsAccepted}
+                  </p>
+                )}
+              </div>
+
+              {/* ── Submit button ── */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-700 py-3 text-sm font-bold text-white shadow-sm transition-all duration-150 hover:bg-teal-800 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:py-3.5 sm:text-base cursor-pointer"
+              >
+                {loading ? (
+                  <>
+                    <Loader2
+                      className="h-4 w-4 animate-spin"
+                      aria-hidden="true"
+                    />
+                    Creating account…
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4" aria-hidden="true" />
+                    Create account
+                  </>
+                )}
+              </button>
+
+              {/* ── Sign in link ── */}
+              <p className="text-center text-xs text-slate-400 sm:text-sm">
+                Already have an account?{" "}
+                <Link
+                  to="/auth/login"
+                  className="font-semibold text-teal-700 hover:underline"
+                >
+                  Sign in →
+                </Link>
+              </p>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
-
-export default Register;

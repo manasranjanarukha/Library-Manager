@@ -1,191 +1,200 @@
-import React from "react";
+// React
+import { useState, useContext, useMemo } from "react";
 
-import { useContext } from "react";
-import {
-  Star,
-  Calendar,
-  BookOpen,
-  IndianRupee,
-  Heart,
-  Trash2,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// Router
+import { Link, useNavigate } from "react-router-dom";
+
+// Icons
+import { Star, Calendar, BookOpen, Bookmark, ChevronRight } from "lucide-react";
+
+// Contexts
 import { UserContext } from "../context/userContext";
-import { addFavBook } from "../service/favService";
-import { useFavorites } from "../context/FavoritesContext";
-const API_URL = import.meta.env.VITE_API_URL;
-export default function BookCard({
-  book,
-  onFavoritePage,
-  // favoriteBooks,
-}) {
-  console.log(book);
+import { useSaveForLater } from "../context/SaveForLaterContext";
+function renderStars(rating) {
+  if (rating === undefined || rating === null) return null;
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  const emptyStars = 5 - Math.ceil(rating);
 
-  const { favoriteBooks, removeFavorite, addFavoriteLocal } = useFavorites();
+  return (
+    <div
+      className="flex items-center gap-0.5"
+      aria-label={`Rating: ${rating} out of 5`}
+    >
+      {[...Array(fullStars)].map((_, i) => (
+        <Star
+          key={`full-${i}`}
+          className="w-3.5 h-3.5 fill-amber-400 text-amber-400"
+        />
+      ))}
+      {hasHalfStar && (
+        <div className="relative">
+          <Star className="w-3.5 h-3.5 text-slate-200" />
+          <div className="absolute inset-0 overflow-hidden w-1/2">
+            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+          </div>
+        </div>
+      )}
+      {[...Array(emptyStars)].map((_, i) => (
+        <Star key={`empty-${i}`} className="w-3.5 h-3.5 text-slate-200" />
+      ))}
+      <span className="text-xs font-semibold text-slate-500 ml-1.5">
+        {rating.toFixed(1)}
+      </span>
+    </div>
+  );
+}
+
+export default function BookCard({ book }) {
+  console.log("BookCard Render:", book);
+  const {
+    _id,
+    title,
+    cover,
+    genre,
+    description,
+    publishedYear,
+    pages,
+    rating,
+    author,
+  } = book;
+  const {
+    saveForLaterBooks,
+    removeSaveForLaterContext,
+    addSaveForLaterContext,
+  } = useSaveForLater();
+
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
 
-  function handleViewDetails() {
+  const saveForLaterIds = useMemo(
+    () => new Set(saveForLaterBooks.map((f) => f?._id)),
+    [saveForLaterBooks],
+  );
+  console.log("Save For Later ids", saveForLaterIds);
+
+  const isSaveForLater = saveForLaterIds.has(_id);
+
+  async function toggleSaveForLater() {
     if (!user) {
       alert("Please login or Register");
       navigate("/auth/login");
-    } else {
-      navigate(`/book-items/${book.id}`);
+      return;
+    }
+    try {
+      if (isSaveForLater) {
+        await removeSaveForLaterContext(_id);
+      } else {
+        await addSaveForLaterContext(_id);
+        // navigate(`/reader/${user._id}/save-for-later`);
+      }
+    } catch (error) {
+      console.error("Save for later error:", error);
     }
   }
-  console.log(favoriteBooks);
 
-  const favoriteIds = new Set(favoriteBooks.map((f) => f._id));
-  console.log("favoriteIds:", favoriteIds);
-
-  console.log(favoriteBooks);
-
-  // Heart Fill Logic
-  const isFavorite = favoriteIds.has(book.id);
-  console.log(isFavorite);
-
-  const toggleFavorite = () => {
-    if (isFavorite) {
-      removeFavorite(book.id);
-    } else {
-      addFavoriteLocal(book.id); // full object
-    }
-  };
-  // Handle The Favourite Heart UI
-
-  // Helper function to render star rating
-  const renderStars = (rating) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    const emptyStars = 5 - Math.ceil(rating);
-
-    return (
-      <div className="flex items-center gap-1">
-        {/* Full stars */}
-        {[...Array(fullStars)].map((_, i) => (
-          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-        ))}
-        {/* Half star */}
-        {hasHalfStar && (
-          <div className="relative">
-            <Star className="w-4 h-4 text-gray-300" />
-            <div className="absolute inset-0 overflow-hidden w-1/2">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            </div>
-          </div>
-        )}
-        {/* Empty stars */}
-        {[...Array(emptyStars)].map((_, i) => (
-          <Star key={i} className="w-4 h-4 text-gray-300" />
-        ))}
-        <span className="text-sm text-gray-600 ml-1">({rating})</span>
-      </div>
-    );
+  const bookStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    name: title,
+    author: {
+      "@type": "Person",
+      name: author?.fullName || "Unknown Author",
+    },
+    image: cover,
+    numberOfPages: pages,
+    datePublished: publishedYear,
+    ...(rating?.average && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: rating.average,
+        bestRating: "5",
+      },
+    }),
   };
 
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 w-full group">
-      <div className="flex flex-col sm:flex-row gap-4 p-4">
-        {/* Left Side - Image Container */}
-        <div className="flex-shrink-0 w-full sm:w-40 md:w-48 lg:w-44 xl:w-48">
-          <div
-            className="relative w-full bg-gray-100 rounded-lg overflow-hidden"
-            style={{ paddingTop: "150%" }}
-          >
+    <article className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] shadow-[0_2px_12px_rgba(0,0,0,0.07)] border border-slate-100 active:scale-[0.99] h-full">
+      <script type="application/ld+json">
+        {JSON.stringify(bookStructuredData)}
+      </script>
+      <div className="flex gap-0 h-full">
+        {/* Cover Column */}
+        <div className="relative flex-shrink-0 w-[110px] sm:w-[130px]">
+          <div className="relative h-full min-h-[170px] bg-slate-50 overflow-hidden">
             <img
-              src={book.cover}
-              alt={book.title}
-              className="absolute inset-0 w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+              src={cover}
+              alt={`Cover of ${title}`}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
-
-            {/* Genre Badge */}
-            <div className="absolute top-2 left-2 z-10">
-              <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm">
-                {book.genre}
+            <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+            <div className="absolute top-2.5 left-0 right-0 flex justify-center">
+              <span className="bg-teal-600/90 backdrop-blur-sm text-white px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase shadow-sm max-w-[90%] truncate">
+                {genre}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Right Side - Book Details */}
-        <div className="flex-1 flex flex-col justify-between min-w-0">
-          {/* Top Section - Title, Author, Rating, Description */}
-          <div>
-            {/* Title */}
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
-              {book.title}
-            </h2>
-
-            {/* Author */}
-            <p className="text-gray-600 font-medium text-sm mb-2">
-              by {book.author}
+        {/* Content Column */}
+        <div className="flex-1 flex flex-col p-3.5 sm:p-4 min-w-0">
+          <div className="mb-1">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-teal-700 transition-colors duration-200">
+              {title}
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5 font-medium truncate">
+              {author?.fullName || "Unknown Author"}
             </p>
+          </div>
 
-            {/* Rating */}
-            <div className="mb-3">{renderStars(book.rating)}</div>
+          <div className="mb-2">{renderStars(rating?.average || 0)}</div>
 
-            {/* Price */}
-            <div className="mb-3">
-              <div className="inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 rounded-lg text-lg font-bold shadow-md">
-                <IndianRupee className="w-4 h-4" />
-                {book.price}
-              </div>
+          <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 mb-3 flex-1">
+            {description}
+          </p>
+
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+              <Calendar className="w-3 h-3 text-teal-500" aria-hidden="true" />
+              <span>{publishedYear}</span>
             </div>
-
-            {/* Description */}
-            <p className="text-gray-700 text-sm leading-relaxed mb-3 line-clamp-3 sm:line-clamp-2 md:line-clamp-3">
-              {book.description}
-            </p>
-
-            {/* Book Details */}
-            <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
-                <span className="font-medium">{book.publishedYear}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5" />
-                <span className="font-medium">{book.pages} pages</span>
-              </div>
+            <div className="w-px h-3 bg-slate-200" />
+            <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+              <BookOpen className="w-3 h-3 text-teal-500" aria-hidden="true" />
+              <span>{pages} pp.</span>
             </div>
           </div>
 
-          {/* Bottom Section - Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-2 mt-auto">
-            <button
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-[1.02] shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
-              onClick={handleViewDetails}
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/book-items/${_id}`}
+              className="flex-1 flex items-center justify-center gap-1.5 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
             >
-              View Details
-            </button>
+              <span>View Details</span>
+              <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </Link>
 
             <button
-              className="sm:w-auto px-4 py-2.5 border-2 border-red-400 text-yellow-500 hover:bg-white hover:border-red-500 hover:text-yellow-500 rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-              onClick={toggleFavorite}
+              onClick={toggleSaveForLater}
+              aria-label={
+                isSaveForLater ? "Remove from Save for later" : "Save for later"
+              }
+              className={`flex-shrink-0 p-2 rounded-xl border-2 transition-all duration-200 active:scale-90 cursor-pointer ${
+                isSaveForLater
+                  ? "border-red-300 bg-red-50 text-red-500 hover:bg-red-100"
+                  : "border-slate-200 bg-slate-50 text-slate-400 hover:border-red-300 hover:bg-red-50 hover:text-red-500"
+              }`}
             >
-              {onFavoritePage ? (
-                <>
-                  <Trash2 className="w-4 h-4" />
-                  <span className="sm:hidden">Remove</span>
-                </>
-              ) : (
-                <>
-                  <Heart
-                    className={`w-4 h-4 ${
-                      isFavorite
-                        ? "fill-red-500 text-red-500"
-                        : "text-red-500 hover:fill-red-500"
-                    }`}
-                  />
-                  <span className="sm:hidden">
-                    {isFavorite ? "Favorited" : "Favorite"}
-                  </span>
-                </>
-              )}
+              <Bookmark
+                className={`w-4 h-4 transition-all duration-200 ${isSaveForLater ? "fill-red-500 text-red-500" : ""}`}
+              />
             </button>
           </div>
         </div>
       </div>
-    </div>
+
+      <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-gradient-to-r from-teal-500 to-teal-300 group-hover:w-full transition-all duration-500 rounded-full" />
+    </article>
   );
 }

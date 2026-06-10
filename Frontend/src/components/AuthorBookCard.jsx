@@ -1,67 +1,109 @@
+// React
 import React, { useState } from "react";
-import { Loader, Trash2 } from "lucide-react";
-import { Star, Calendar, BookOpen, IndianRupee, Pencil } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { deleteBookFromServer } from "../service/bookService";
 
-const API_URL = import.meta.env.VITE_API_URL;
+// Router
+import { Link } from "react-router-dom";
+
+// Icons
+import { Loader, Trash2, Star, Calendar, BookOpen } from "lucide-react";
+
+// 1. READABILITY: Moved pure function outside the component to prevent re-creation on every render
+const renderStars = (rating) => {
+  if (!rating) return null;
+
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  const emptyStars = 5 - Math.ceil(rating);
+
+  return (
+    <div
+      className="flex items-center gap-1"
+      aria-label={`Rating: ${rating} out of 5 stars`}
+    >
+      {[...Array(fullStars)].map((_, i) => (
+        <Star
+          key={`full-${i}`}
+          className="w-4 h-4 fill-yellow-400 text-yellow-400"
+        />
+      ))}
+      {hasHalfStar && (
+        <div className="relative">
+          <Star className="w-4 h-4 text-gray-300" />
+          <div className="absolute inset-0 overflow-hidden w-1/2">
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+          </div>
+        </div>
+      )}
+      {[...Array(emptyStars)].map((_, i) => (
+        <Star key={`empty-${i}`} className="w-4 h-4 text-gray-300" />
+      ))}
+      <span className="text-sm text-gray-600 ml-1">({rating})</span>
+    </div>
+  );
+};
+
 export default function AuthorBookCard({ book, onDelete }) {
   const [isDeleting, setIsDeleting] = useState(false);
-  const navigate = useNavigate();
-  const handleEditDetails = () => {
-    navigate(`/edit-book/${book.id}`);
-  };
-  console.log("book", book);
+
+  // 2. READABILITY: Destructure the book object early for cleaner JSX
+  const {
+    _id,
+    title,
+    cover,
+    genre,
+    description,
+    publishedYear,
+    pages,
+    rating,
+    author,
+  } = book;
+
+  const authorName = author?.fullName || "Unknown Author";
 
   const handleDelete = async () => {
     if (isDeleting) return;
-
     if (!window.confirm("Delete this book?")) return;
 
     try {
       setIsDeleting(true);
-
-      await onDelete(book.id);
+      await onDelete(_id);
     } catch (err) {
-      console.error(err);
+      if (import.meta.env.DEV) console.error(err);
       alert("Delete failed");
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Helper function to render star rating
-  const renderStars = (rating) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    const emptyStars = 5 - Math.ceil(rating);
-
-    return (
-      <div className="flex items-center gap-1">
-        {/* Full stars */}
-        {[...Array(fullStars)].map((_, i) => (
-          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-        ))}
-        {/* Half star */}
-        {hasHalfStar && (
-          <div className="relative">
-            <Star className="w-4 h-4 text-gray-300" />
-            <div className="absolute inset-0 overflow-hidden w-1/2">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            </div>
-          </div>
-        )}
-        {/* Empty stars */}
-        {[...Array(emptyStars)].map((_, i) => (
-          <Star key={i} className="w-4 h-4 text-gray-300" />
-        ))}
-        <span className="text-sm text-gray-600 ml-1">({rating})</span>
-      </div>
-    );
+  // 3. SEO: Generate Structured Data for Search Engines
+  const bookStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    name: title,
+    author: {
+      "@type": "Person",
+      name: authorName,
+    },
+    image: cover,
+    numberOfPages: pages,
+    datePublished: publishedYear,
+    ...(rating?.average && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: rating.average,
+        bestRating: "5",
+      },
+    }),
   };
 
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 w-full group">
+    /* 4. SEO: Changed root div to <article> for better semantic meaning */
+    <article className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 w-full group">
+      {/* Inject SEO JSON-LD schema invisibly into the DOM */}
+      <script type="application/ld+json">
+        {JSON.stringify(bookStructuredData)}
+      </script>
+
       <div className="flex flex-col sm:flex-row gap-4 p-4">
         {/* Left Side - Image Container */}
         <div className="flex-shrink-0 w-full sm:w-40 md:w-48 lg:w-44 xl:w-48">
@@ -70,15 +112,14 @@ export default function AuthorBookCard({ book, onDelete }) {
             style={{ paddingTop: "150%" }}
           >
             <img
-              src={book.cover}
-              alt={book.title}
+              src={cover}
+              alt={`Cover art for ${title}`} // Slightly improved alt text for screen readers/SEO
+              loading="lazy" // SEO/Performance: Lazy load off-screen images
               className="absolute inset-0 w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
             />
-
-            {/* Genre Badge */}
             <div className="absolute top-2 left-2 z-10">
               <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm">
-                {book.genre}
+                {genre}
               </span>
             </div>
           </div>
@@ -86,64 +127,51 @@ export default function AuthorBookCard({ book, onDelete }) {
 
         {/* Right Side - Book Details */}
         <div className="flex-1 flex flex-col justify-between min-w-0">
-          {/* Top Section - Title, Author, Rating, Description */}
           <div>
-            {/* Title */}
             <h2 className="text-base sm:text-xl md:text-2xl font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
-              {book.title}
+              {title}
             </h2>
-
-            {/* Author */}
             <p className="text-gray-600 font-medium text-sm mb-2">
-              by {book.author}
+              by {authorName}
             </p>
 
-            {/* Rating */}
-            <div className="mb-3">{renderStars(book.rating)}</div>
+            <div className="mb-3">{renderStars(rating?.average)}</div>
 
-            {/* Price */}
-            <div className="mb-3">
-              <div className="inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 rounded-lg text-lg font-bold shadow-md">
-                <IndianRupee className="w-4 h-4" />
-                {book.price}
-              </div>
-            </div>
-
-            {/* Description */}
             <p className="text-gray-700 text-[1rem] leading-relaxed mb-3 line-clamp-3 sm:line-clamp-2 md:line-clamp-3">
-              {book.description}
+              {description}
             </p>
 
-            {/* Book Details */}
             <div className="flex items-center gap-4 text-lg text-gray-500 mb-4">
               <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
-                <span className="font-medium">{book.publishedYear}</span>
+                <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="font-medium">{publishedYear}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5" />
-                <span className="font-medium">{book.pages} pages</span>
+                <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="font-medium">{pages} pages</span>
               </div>
             </div>
           </div>
 
           {/* Bottom Section - Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-2 mt-auto">
-            <button
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-[1.02] shadow-md hover:shadow-lg active:scale-95"
-              onClick={handleEditDetails}
+            {/* 5. SEO & Accessibility: Use <Link> instead of <button onClick={navigate}> */}
+            <Link
+              to={`/edit-book/${_id}`}
+              className="flex-1 text-center bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-[1.02] shadow-md hover:shadow-lg active:scale-95"
             >
               Edit Details
-            </button>
+            </Link>
 
             <button
-              className="sm:w-auto px-4 py-2.5 border-2 border-red-400 text-red-500 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              className="sm:w-auto px-4 py-2.5 border-2 border-red-400 text-red-500 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleDelete}
               disabled={isDeleting}
+              aria-label={`Delete ${title}`} // Accessibility
             >
               {isDeleting ? (
                 <>
-                  <Loader className="w-4 h-4" />
+                  <Loader className="w-4 h-4 animate-spin" />
                   <span className="sm:hidden">Deleting</span>
                 </>
               ) : (
@@ -156,6 +184,6 @@ export default function AuthorBookCard({ book, onDelete }) {
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

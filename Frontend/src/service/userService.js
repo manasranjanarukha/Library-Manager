@@ -63,7 +63,9 @@ export const getCurrentUser = async () => {
 
     return await response.json(); // { loggedIn: true, user: {...} }
   } catch (err) {
-    console.error("Error fetching current user:", err);
+    if (import.meta.env.DEV) {
+      console.error("Error fetching current user:", err);
+    }
     return { loggedIn: false, user: null };
   }
 };
@@ -98,5 +100,52 @@ export const deleteUserInServer = async (id) => {
     credentials: "include",
   });
   const result = await response.json();
-  console.log(result);
+};
+
+export const forgotPassword = async (email) => {
+  const response = await fetch(`${API_URL}/auth/forgot-password`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  const result = await response.json();
+  console.log("forgot pass", result);
+
+  return result;
+};
+
+export const verifyCaptcha = async (email, captcha) => {
+  const response = await fetch(`${API_URL}/auth/verify-captcha`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, captcha }),
+  });
+
+  const result = await response.json();
+  console.log("verify-captcha", result);
+
+  return result;
+};
+
+export const resetPassword = async (email, newPassword) => {
+  const response = await fetch(`${API_URL}/auth/reset-password`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, newPassword }),
+  });
+
+  const result = await response.json();
+  console.log("verify-captcha", result);
+
+  return result;
 };

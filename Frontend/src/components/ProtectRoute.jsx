@@ -1,5 +1,10 @@
+// React
 import { useContext } from "react";
+
+// Router
 import { Navigate } from "react-router-dom";
+
+// Contexts
 import { UserContext } from "../context/userContext";
 
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
@@ -11,7 +16,7 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <img src="/book-loading.gif" alt="Loading book" />
+          <img src="/book-loading.gif" alt="Loading book" loading="lazy" />
           <p className="mt-4 text-gray-600">Loading User</p>
         </div>
       </div>

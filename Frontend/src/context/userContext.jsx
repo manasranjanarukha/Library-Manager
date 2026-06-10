@@ -1,7 +1,11 @@
-// UserContext.jsx
+// React
 import { createContext, useState, useEffect } from "react";
-import { getCurrentUser, logoutUserInServer } from "../service/userService";
+
+// Router
 import { useNavigate } from "react-router-dom";
+
+// Services
+import { getCurrentUser, logoutUserInServer } from "../service/userService";
 
 export const UserContext = createContext();
 
@@ -20,7 +24,9 @@ export const UserProvider = ({ children }) => {
           setUser(null);
         }
       } catch (err) {
-        console.error("Error fetching user:", err);
+        if (import.meta.env.DEV) {
+          console.error("Error fetching user on app load:", err);
+        }
 
         setUser(null);
       }

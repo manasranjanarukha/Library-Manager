@@ -1,6 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL;
-export const addFavBook = async (bookId) => {
-  const response = await fetch(`${API_URL}/favorites/star/${bookId}`, {
+export const addSaveForLater = async (bookId) => {
+  const response = await fetch(`${API_URL}/save-for-later/${bookId}`, {
     method: "POST",
     credentials: "include",
   });
@@ -12,14 +12,14 @@ export const addFavBook = async (bookId) => {
     console.error("Backend error:", data);
 
     // Throw backend message to caller
-    throw new Error(data.message || "Failed to favorite book");
+    throw new Error(data.message || "Failed to save book for later");
   }
 
   return data;
 };
 
-export const fetchFavBooks = async () => {
-  const response = await fetch(`${API_URL}/favorites/stars`, {
+export const fetchSaveForLaterBooks = async () => {
+  const response = await fetch(`${API_URL}/save-for-later`, {
     method: "GET",
     credentials: "include",
   });
@@ -31,16 +31,14 @@ export const fetchFavBooks = async () => {
     console.error("Backend error:", data);
 
     // Throw backend message to caller
-    throw new Error(data.message || "Failed to fetch favorite books");
+    throw new Error(data.message || "Failed to fetch saved books");
   }
 
   return data;
 };
 
-export const removeFavBook = async (bookId) => {
-  console.log("Book id", bookId);
-
-  const response = await fetch(`${API_URL}/favorites/star/${bookId}`, {
+export const removeSaveForLater = async (bookId) => {
+  const response = await fetch(`${API_URL}/save-for-later/${bookId}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -50,7 +48,7 @@ export const removeFavBook = async (bookId) => {
     // Print backend error message
     console.error("Backend error:", data);
     // Throw backend message to caller
-    throw new Error(data.message || "Failed to remove favorite book");
+    throw new Error(data.message || "Failed to remove saved book");
   }
   return data;
 };
