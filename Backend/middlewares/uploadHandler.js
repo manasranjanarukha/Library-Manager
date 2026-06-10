@@ -1,5 +1,6 @@
 const upload = require("./upload");
 const cloudinary = require("../config/cloudinaryConfig");
+const cleanupUploads = require("../utils/cloudinaryCleanup");
 
 // 🔧 Helper: extract public_id from Cloudinary URL
 const extractPublicId = (url) => {
@@ -27,6 +28,8 @@ const uploadFields = upload.fields([
 const handleUpload = (req, res, next) => {
   uploadFields(req, res, async function (err) {
     if (err) {
+      console.log(req.files);
+      await cleanupUploads(req.files);
       console.error("Multer Error:", {
         message: err.message,
         code: err.code,
@@ -42,9 +45,6 @@ const handleUpload = (req, res, next) => {
             const coverUp = await cloudinary.uploader.destroy(publicId, {
               resource_type: "image",
             });
-            console.log("coverUp:", coverUp);
-
-            console.log("🧹 Cleaned uploaded cover:", publicId);
           }
         } catch (cleanupErr) {
           console.error("Cover cleanup failed:", cleanupErr.message);
@@ -63,9 +63,6 @@ const handleUpload = (req, res, next) => {
             const bookFileUp = await cloudinary.uploader.destroy(publicId, {
               resource_type: isRaw ? "raw" : "image",
             });
-            console.log("bookFileUp:", bookFileUp);
-
-            console.log("🧹 Cleaned uploaded bookFile:", publicId);
           }
         } catch (cleanupErr) {
           console.error("Book cleanup failed:", cleanupErr.message);

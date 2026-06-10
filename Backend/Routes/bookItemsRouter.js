@@ -7,7 +7,7 @@ const handleUpload = require("../middlewares/uploadHandler");
 const bookItemsController = require("../controllers/bookItemsController");
 
 bookItemsRouter.post(
-  "/",
+  "/:id",
   // isAuthenticated,
   handleUpload,
 
@@ -28,6 +28,7 @@ bookItemsRouter.put(
   ]),
   bookItemsController.editBookItem,
 );
+
 bookItemsRouter.delete("/:id", bookItemsController.deleteBookItem);
 
 module.exports = bookItemsRouter;

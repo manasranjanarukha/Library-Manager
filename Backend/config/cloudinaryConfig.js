@@ -13,5 +13,5 @@ cloudinary.config({
 });
 
 // Test the configuration
-console.log(cloudinary.config());
+
 module.exports = cloudinary;

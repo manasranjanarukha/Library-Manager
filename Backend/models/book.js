@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Review = require("./review");
-const Favorite = require("./favorite");
-const User=require("./user")
+const SaveForLater = require("./saveForLater");
+const User = require("./user");
 
 const bookSchema = new mongoose.Schema(
   {
@@ -19,20 +19,16 @@ const bookSchema = new mongoose.Schema(
       trim: true,
     },
     author: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
-      trim: true,
     },
     genre: {
       type: String,
       required: true,
       trim: true,
     },
-    price: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
+
     description: {
       type: String,
       required: true,
@@ -40,10 +36,17 @@ const bookSchema = new mongoose.Schema(
     },
 
     rating: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
+      average: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5,
+        set: (val) => Math.round(val * 10) / 10,
+      },
+      count: {
+        type: Number,
+        default: 0,
+      },
     },
     pages: {
       type: Number,
@@ -54,34 +57,19 @@ const bookSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    
+    status: {
+      type: String,
+      enum: ["draft", "published"],
+      default: "published",
+    },
+    saves: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true },
-
 );
-
-// CASCADE DELETE MIDDLEWARE
-bookSchema.pre("findOneAndDelete", async function (next) {
-  try {
-    console.log(this.model);
-
-    const book = await this.model.findOne(this.getFilter());
-
-    if (book) {
-      await Review.deleteMany({ book: book._id });
-      await Favorite.deleteMany({ book: book._id });
-
-      console.log("Deleted related reviews and favorites");
-    }
-
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
 
 const Book = mongoose.model("Book", bookSchema);
 
 module.exports = Book;
-
-//   users: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

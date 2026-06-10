@@ -9,7 +9,6 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     let folderName = "";
     let resourceType = "auto"; // Default to 'auto' to handle both images and non-images
-    console.log("cloudinary Req", file);
 
     // Replicating your routing logic for Cloudinary folders
     if (file.fieldname === "cover") {

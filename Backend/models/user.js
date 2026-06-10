@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema(
 
     userType: { type: String, enum: ["Reader", "Author"], default: "Reader" },
     termsAccepted: { type: Boolean, default: false },
+    captcha: { type: String },
   },
 
   { timestamps: true },

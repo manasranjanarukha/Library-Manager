@@ -14,5 +14,8 @@ authRouter.get("/me", authController.whoAmI);
 authRouter.post("/logout", authController.logout);
 authRouter.put("/user/:id", authController.updateUser);
 authRouter.delete("/user/:id", authController.deleteUser);
+authRouter.post("/forgot-password", authController.forgotPassword);
+authRouter.post("/verify-captcha", authController.verifyCaptcha);
+authRouter.post("/reset-password", authController.resetPassword);
 
 module.exports = authRouter;

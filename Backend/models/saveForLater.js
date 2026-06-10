@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const favoriteSchema = new mongoose.Schema(
+const saveForLaterSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,7 +16,7 @@ const favoriteSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Prevent same user favoriting same book twice
-favoriteSchema.index({ user: 1, book: 1 }, { unique: true });
+// Prevent same user saving same book twice
+saveForLaterSchema.index({ user: 1, book: 1 }, { unique: true });
 
-module.exports = mongoose.model("Favorite", favoriteSchema);
+module.exports = mongoose.model("SaveForLater", saveForLaterSchema);

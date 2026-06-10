@@ -16,7 +16,7 @@ const app = express();
 const rootDir = require("./utils/pathUtil");
 const bookItemsRouter = require("./Routes/bookItemsRouter");
 const authRouter = require("./Routes/authRouter");
-const favRouter = require("./Routes/favRouter");
+const saveForLaterRouter = require("./Routes/saveForLaterRouter");
 const reviewItemsRouter = require("./Routes/reviewRouter");
 
 // Session Store
@@ -55,7 +55,7 @@ app.use(
 
 app.use("/book-items", bookItemsRouter);
 app.use("/auth", authRouter);
-app.use("/favorites", favRouter);
+app.use("/save-for-later", saveForLaterRouter);
 app.use("/reviews", reviewItemsRouter);
 // 🔥 ADD THIS BLOCK HERE (IMPORTANT)
 app.use((err, req, res, next) => {

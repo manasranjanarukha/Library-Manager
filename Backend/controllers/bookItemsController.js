@@ -3,6 +3,9 @@ const { check, validationResult } = require("express-validator");
 const Book = require("../models/book");
 const cloudinary = require("../config/cloudinaryConfig");
 const cleanupUploads = require("../utils/cloudinaryCleanup");
+const deleteBookWithDependencies = require("../services/bookService");
+const User = require("../models/user");
+const Review = require("../models/review");
 exports.createBookItem = [
   check("title")
     .trim()
@@ -11,15 +14,9 @@ exports.createBookItem = [
     .isLength({ min: 2, max: 40 })
     .withMessage("Title must be between 2 and 40 characters"),
 
-  check("author").trim().notEmpty().withMessage("Author is required"),
+  // check("author").trim().notEmpty().withMessage("Author is required"),
 
   check("genre").trim().notEmpty().withMessage("Genre is required"),
-
-  check("price")
-    .notEmpty()
-    .withMessage("Price is required")
-    .isNumeric()
-    .withMessage("Price must be a positive number"),
 
   check("description")
     .notEmpty()
@@ -27,11 +24,6 @@ exports.createBookItem = [
     .trim()
     .isLength({ min: 10 })
     .withMessage("Description must be at least 10 characters"),
-
-  check("rating")
-    .optional()
-    .isFloat({ min: 0, max: 5 })
-    .withMessage("Rating must be between 0 and 5"),
 
   check("pages")
     .optional()
@@ -75,33 +67,24 @@ exports.createBookItem = [
     }
 
     // your existing logic continues...
-    const {
-      title,
-      author,
-      genre,
-      price,
-      description,
-      rating,
-      pages,
-      publishedYear,
-    } = req.body;
+    const { title, genre, description, pages, publishedYear, status } =
+      req.body;
+
     try {
-      console.log("✅ STEP 4: All checks passed. Saving to Database...");
       const book = new Book({
         cover: req.files?.cover?.[0]?.path || "",
         bookFile: req.files?.bookFile?.[0]?.path || "",
         title,
-        author,
+        author: req.params.id,
         genre,
-        price,
         description,
-        rating,
         pages,
         publishedYear,
+        status,
       });
 
       const savedBook = await book.save();
-      console.log("🎉 STEP 5: Success response sent to user!");
+
       return res.status(201).json({
         success: true,
         message: "Book created successfully",
@@ -109,9 +92,7 @@ exports.createBookItem = [
       });
     } catch (err) {
       console.error("Error creating book:", err.message);
-      console.log("🔥 FULL ERROR OBJECT:", err);
-      console.log("🔥 ERROR SOURCE:", err.name);
-      console.log("🔥 ERROR MESSAGE:", err.message);
+
       res.status(500).json({
         success: false,
         message: "Server error while creating book",
@@ -129,25 +110,12 @@ exports.editBookItem = [
     .isLength({ min: 2, max: 40 })
     .withMessage("Title must be between 2 and 40 characters"),
 
-  check("author")
-    .optional()
-    .isString()
-    .trim()
-    .notEmpty()
-    .withMessage("Author cannot be empty"),
   check("genre").optional().notEmpty().withMessage("Genre cannot be empty"),
-
-  check("price").optional().isNumeric().withMessage("Price must be a number"),
 
   check("description")
     .optional()
     .isLength({ min: 10 })
     .withMessage("Description must be at least 10 characters"),
-
-  check("rating")
-    .optional()
-    .isFloat({ min: 0, max: 5 })
-    .withMessage("Rating must be between 0 and 5"),
 
   check("pages")
     .optional()
@@ -164,6 +132,7 @@ exports.editBookItem = [
   // =========================
   async (req, res) => {
     const errors = validationResult(req);
+    console.log("Validation errors:", errors.array());
 
     // ❌ If validation fails → cleanup uploaded files
     if (!errors.isEmpty()) {
@@ -205,7 +174,6 @@ exports.editBookItem = [
 
         if (oldCoverId) {
           await cloudinary.uploader.destroy(oldCoverId);
-          console.log("🧹 Deleted old cover");
         }
 
         coverUrl = req.files.cover[0].path;
@@ -226,8 +194,6 @@ exports.editBookItem = [
           await cloudinary.uploader.destroy(oldFileId, {
             resource_type: isRaw ? "raw" : "image",
           });
-
-          console.log("🧹 Deleted old book file");
         }
 
         bookFileUrl = req.files.bookFile[0].path;
@@ -266,115 +232,60 @@ exports.editBookItem = [
 ];
 
 exports.deleteBookItem = async (req, res) => {
+  const bookId = req.params.id;
   try {
-    const bookId = req.params.id;
-    console.log("book id", bookId);
-
-    // =========================
-    // 🔍 Find Book
-    // =========================
-    const existingBook = await Book.findById(bookId);
-
-    if (!existingBook) {
-      return res.status(404).json({
-        success: false,
-        message: "Book not found",
-      });
-    }
-
-    // same extraction pattern used elsewhere
-    const extractPublicId = (url) => {
-      if (!url) return null;
-
-      try {
-        return url
-          .split("/upload/")[1]
-          .replace(/^v\d+\//, "") // removes v1777057005/
-          .replace(/\.[^/.]+$/, "");
-      } catch {
-        return null;
-      }
-    };
-
-    // =========================
-    // 🖼️ DELETE COVER
-    // =========================
-    if (existingBook.cover) {
-      try {
-        const coverId = extractPublicId(existingBook.cover);
-        console.log("cover id", coverId);
-
-        if (coverId) {
-          const cover = await cloudinary.uploader.destroy(coverId, {
-            resource_type: "image",
-          });
-          console.log("cover", cover);
-
-          console.log("🧹 Deleted cover");
-        }
-      } catch (err) {
-        console.error("Cover deletion failed:", err.message);
-      }
-    }
-
-    // =========================
-    // 📄 DELETE BOOK FILE
-    // =========================
-    if (existingBook.bookFile) {
-      try {
-        const fileId = extractPublicId(existingBook.bookFile);
-        console.log("fileID", fileId);
-
-        const isRaw = existingBook.bookFile.includes("/raw/upload/");
-
-        if (fileId) {
-          const book = await cloudinary.uploader.destroy(fileId, {
-            resource_type: isRaw ? "raw" : "image",
-          });
-          console.log("book", book);
-          console.log("🧹 Deleted book file");
-        }
-      } catch (err) {
-        console.error("Book file deletion failed:", err.message);
-      }
-    }
-
-    // =========================
-    // 🗑️ DELETE DB RECORD
-    // =========================
-    await Book.findByIdAndDelete(bookId);
-
+    await deleteBookWithDependencies(bookId);
     return res.status(200).json({
       success: true,
       message: "Book deleted successfully",
     });
-  } catch (err) {
-    console.error("Delete book error:", err.message);
-
+  } catch (error) {
+    console.error("Error deleting book:", error.message);
     return res.status(500).json({
       success: false,
-      message: "Server error while deleting book",
+      message: "Server error",
     });
   }
 };
 
-exports.getAllBookItems = async (req, res, next) => {
-  await Book.find()
-    .then((book) => {
-      res.status(200).json(book);
-    })
-    .catch((err) => {
-      res
-        .status(500)
-        .json({ message: "Fetching book items failed", error: err });
-    });
+exports.getAllBookItems = async (req, res) => {
+  const userId = req.session?.user?._id;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const { genre } = req.query;
+    const query =
+      user.userType === "Author"
+        ? { author: userId }
+        : {
+            status: "published",
+          };
+    if (genre) {
+      query.genre = genre;
+    }
+
+    const books = await Book.find(query).populate("author", "fullName");
+
+    res.status(200).json(books);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 exports.getBookItemById = async (req, res, next) => {
   try {
     const bookId = req.params.id;
 
-    const book = await Book.findById(bookId);
+    const book = await Book.findById(bookId).populate("author", "fullName");
 
     if (!book) {
       return res.status(404).json({ message: "Book not found" });

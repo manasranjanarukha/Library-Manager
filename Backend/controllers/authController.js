@@ -1,7 +1,9 @@
 const { check, validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
-const {deleteUserWithDependencies}=require("../services/userService");
+const { deleteUserWithDependencies } = require("../services/userService");
+const cleanupUploads = require("../utils/cloudinaryCleanup");
+const cloudinary = require("../config/cloudinaryConfig");
 
 exports.register = [
   // 1️⃣ Validation rules
@@ -40,9 +42,6 @@ exports.register = [
   async (req, res) => {
     const errors = validationResult(req);
 
-    console.log("🔥 BODY:", req.body);
-    console.log("🔥 FILES:", req.files);
-
     const {
       fullName,
       email,
@@ -53,6 +52,7 @@ exports.register = [
     } = req.body;
 
     const allErrors = [];
+    console.log(errors.array());
 
     if (!errors.isEmpty()) {
       allErrors.push(...errors.array());
@@ -66,15 +66,14 @@ exports.register = [
       }
 
       if (allErrors.length > 0) {
+        await cleanupUploads(req.files);
         return res.status(422).json({ success: false, errors: allErrors });
       }
 
       const hashedPassword = await bcrypt.hash(password, 12);
 
       const user = new User({
-        profilePicture: req.files?.profilePicture
-          ? req.files.profilePicture[0].filename
-          : null,
+        profilePicture: req.files?.profilePicture?.[0]?.path || "",
         fullName,
         email,
         password: hashedPassword,
@@ -122,10 +121,9 @@ exports.Login = async (req, res, next) => {
 
     // ✅ Set session only here
     req.session.isLoggedIn = true;
-    console.log("req session", req.session.user);
 
     req.session.user = {
-      id: user._id,
+      _id: user._id,
       fullName: user.fullName,
       email: user.email,
       userType: user.userType,
@@ -165,7 +163,7 @@ exports.whoAmI = async (req, res) => {
   }
 
   try {
-    const currentUserId = req.session.user.id;
+    const currentUserId = req.session.user._id;
     const user = await User.findById(currentUserId).select("-password");
 
     return res.status(200).json({
@@ -211,12 +209,90 @@ exports.logout = (req, res) => {
   });
 };
 
-exports.updateUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
+exports.updateUser = [
+  check("fullName")
+    .trim()
+    .isLength({ min: 5 })
+    .withMessage("Full name must be at least 5 characters long.")
+    .matches(/^[A-Za-z\s]+$/)
+    .withMessage("Full name must contain only letters and spaces."),
 
-    // Find user
-    let user = await User.findById(userId);
+  check("email")
+    .isEmail()
+    .withMessage("Please enter a valid email address.")
+    .normalizeEmail(),
+
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+
+    try {
+      const userId = req.params.id;
+
+      // Find user
+      let user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // Update fields
+      const updates = req.body;
+
+      user = await User.findByIdAndUpdate(userId, updates, { new: true });
+      req.session.user.fullName = user.fullName;
+      req.session.user.email = user.email;
+      req.session.user.userType = user.userType;
+      req.session.user.profilePicture = user.profilePicture;
+      return res.status(200).json({
+        success: true,
+        message: "User updated successfully",
+        user,
+      });
+    } catch (error) {
+      console.error("Update error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error during update",
+      });
+    }
+  },
+];
+exports.deleteUser = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    await deleteUserWithDependencies(userId);
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({
+          message: "User deleted but session not destroyed",
+        });
+      }
+
+      res.clearCookie("connect.sid");
+
+      return res.status(200).json({
+        message: "User deleted successfully",
+      });
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -224,41 +300,105 @@ exports.updateUser = async (req, res) => {
       });
     }
 
-    // Update fields
-    const updates = req.body;
-    console.log("Updates", updates);
+    function generateCaptcha(length = 6) {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 
-    user = await User.findByIdAndUpdate(userId, updates, { new: true });
-    req.session.user.fullName = user.fullName;
-    req.session.user.email = user.email;
-    req.session.user.userType = user.userType;
-    req.session.user.profilePicture = user.profilePicture;
+      let captcha = "";
+
+      for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * chars.length);
+        captcha += chars[randomIndex];
+      }
+
+      return captcha;
+    }
+
+    const captcha = generateCaptcha();
+
+    user.captcha = captcha;
+    await user.save();
+
     return res.status(200).json({
       success: true,
-      message: "User updated successfully",
-      user,
+      message: "Email is confirmed",
+      captcha,
     });
   } catch (error) {
-    console.error("Update error:", error);
+    console.error(error);
+
     return res.status(500).json({
       success: false,
-      message: "Server error during update",
+      message: "Internal Server Error",
     });
   }
 };
-exports.deleteUser = async (req, res) => {
-  console.log(req.params.id);
-  
-  try {
-    await deleteUserWithDependencies(req.params.id);
+exports.verifyCaptcha = async (req, res) => {
+  const { email, captcha } = req.body;
+  console.log(req.body);
 
-    res.status(200).json({
-      message: "User deleted successfully",
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.captcha !== captcha) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid captcha",
+      });
+    }
+
+    user.captcha = "";
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Captcha verified successfully",
     });
-  } catch (err) {
-    res.status(500).json({
-      error: err.message,
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
     });
   }
-  
+};
+
+exports.resetPassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    user.password = hashedPassword;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
 };
