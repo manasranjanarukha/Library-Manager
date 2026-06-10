@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 import { TrendingUp, Plus } from "lucide-react";
 
-import { UserContext } from "../../context/userContext";
+import { UserContext } from "../../context/UserContext";
 
 export default function Header() {
   const { user } = useContext(UserContext);
