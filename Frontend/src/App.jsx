@@ -25,7 +25,7 @@ const ForgetPassword = lazy(() => import("./pages/ForgetPassword"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 
 // Contexts
-import { UserProvider } from "./context/userContext";
+import { UserProvider } from "./context/UserContext";
 import { SaveForLaterProvider } from "./context/SaveForLaterContext.jsx";
 
 function App() {
