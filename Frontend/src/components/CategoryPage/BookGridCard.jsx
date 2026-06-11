@@ -2,7 +2,7 @@ import { useContext, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Bookmark, BookOpen, Star } from "lucide-react";
 import { useSaveForLater } from "../../context/SaveForLaterContext";
-import { UserContext } from "../../context/userContext";
+import { UserContext } from "../../context/UserContext";
 export default function BookGridCard({ book }) {
   const { _id, title, cover, author, rating, genre } = book;
   const { user } = useContext(UserContext);

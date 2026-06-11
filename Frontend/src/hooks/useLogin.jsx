@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUserInServer } from "../service/userService";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../context/UserContext";
 export default function useLogin() {
   const navigate = useNavigate();
   const { setUser } = useContext(UserContext);

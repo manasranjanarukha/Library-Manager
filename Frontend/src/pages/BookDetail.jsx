@@ -19,7 +19,7 @@ import PageMeta from "../components/PageMeta";
 import { bookDetailFromServer } from "../service/bookService";
 
 // Contexts
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../context/UserContext";
 
 function Skeleton() {
   return (

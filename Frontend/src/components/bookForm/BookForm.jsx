@@ -16,7 +16,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { UserContext } from "../../context/userContext";
+import { UserContext } from "../../context/UserContext";
 import Field from "./Field";
 import TextInput from "./TextInput";
 import CoverUpload from "./CoverUpload";

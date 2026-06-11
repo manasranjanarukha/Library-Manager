@@ -17,7 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 // Contexts
-import { UserContext } from "../../context/userContext";
+import { UserContext } from "../../context/UserContext";
 import { useSaveForLater } from "../../context/SaveForLaterContext";
 import Logo from "./Logo";
 import DesktopNav from "./DesktopNav";

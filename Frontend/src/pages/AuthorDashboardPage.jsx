@@ -16,7 +16,7 @@ import BookCardWrapper from "../components/authorDashboard/BookCardWrapper";
 // Generic components
 import PageMeta from "../components/PageMeta";
 // Context
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../context/UserContext";
 
 function SkeletonCard() {
   return (

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 // Contexts
-import { UserContext } from "./userContext";
+import { UserContext } from "./UserContext";
 
 // Services
 import {

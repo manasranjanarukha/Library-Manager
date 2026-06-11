@@ -16,7 +16,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { updateUserInServer, deleteUserInServer } from "../service/userService";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../context/UserContext";
 import ProfileHeader from "../components/profilePageComponents/ProfileHeader";
 import DeleteDialog from "../components/profilePageComponents/DeleteDialog";
 import ProfileInfoCard from "../components/profilePageComponents/ProfileInfoCard";

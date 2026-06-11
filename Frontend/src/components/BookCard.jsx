@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Star, Calendar, BookOpen, Bookmark, ChevronRight } from "lucide-react";
 
 // Contexts
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../context/UserContext";
 import { useSaveForLater } from "../context/SaveForLaterContext";
 function renderStars(rating) {
   if (rating === undefined || rating === null) return null;
