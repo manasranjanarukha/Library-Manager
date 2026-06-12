@@ -121,7 +121,10 @@ export const fetchBookItemsFromServer = async (genre) => {
 };
 
 export const bookDetailFromServer = async (id) => {
-  const response = await fetch(`${API_URL}/book-items/${id}`);
+  const response = await fetch(`${API_URL}/book-items/${id}`, {
+    method: "GET",
+    credentials: "include",
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch item details");
