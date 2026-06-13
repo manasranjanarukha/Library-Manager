@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import * as pdfjsLib from "pdfjs-dist";
+import { pdfjs } from "react-pdf";
 import { GENRES } from "../../constants/geners";
 import {
   Upload,
