@@ -503,6 +503,9 @@ export default function BookReader() {
               <Document
                 file={book.bookFile}
                 onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={(error) => {
+                  console.error("PDF Load Error:", error);
+                }}
                 loading={
                   <div className="flex h-64 items-center justify-center">
                     <BookOpen
