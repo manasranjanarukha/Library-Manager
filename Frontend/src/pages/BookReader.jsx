@@ -21,6 +21,9 @@ import {
 // PDF
 import { Document, Page, pdfjs } from "react-pdf";
 
+console.log("API Version:", pdfjs.version);
+console.log("Worker URL:", pdfjs.GlobalWorkerOptions.workerSrc);
+
 // Services
 import { bookDetailFromServer } from "../service/bookService";
 
@@ -36,7 +39,7 @@ function ReaderMeta({ book }) {
   useEffect(() => {
     if (!book) return;
     const prev = document.title;
-    document.title = `Reading: ${book?.title} — Readymate`;
+    document.title = `Reading: ${book.title} — Readymate`;
 
     let desc = document.querySelector('meta[name="description"]');
     if (!desc) {
@@ -45,7 +48,7 @@ function ReaderMeta({ book }) {
       document.head.appendChild(desc);
     }
     const prevDesc = desc.content;
-    desc.content = `Read "${book?.title}" by ${book?.author?.fullName || "Unknown Author"} on Readymate. ${book?.description?.slice(0, 120) || ""}`;
+    desc.content = `Read "${book.title}" by ${book.author?.fullName || "Unknown Author"} on Readymate. ${book.description?.slice(0, 120) || ""}`;
 
     // robots: noindex reader pages (prevents duplicate content)
     let robots = document.querySelector('meta[name="robots"]');
@@ -71,12 +74,12 @@ function ReaderMeta({ book }) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Book",
-    name: book?.title,
-    author: { "@type": "Person", name: book?.author?.fullName || "Unknown" },
-    image: book?.cover,
-    numberOfPages: book?.pages,
-    datePublished: book?.publishedYear,
-    genre: book?.genre,
+    name: book.title,
+    author: { "@type": "Person", name: book.author?.fullName || "Unknown" },
+    image: book.cover,
+    numberOfPages: book.pages,
+    datePublished: book.publishedYear,
+    genre: book.genre,
   };
   return <script type="application/ld+json">{JSON.stringify(schema)}</script>;
 }
@@ -436,10 +439,10 @@ export default function BookReader() {
 
                 <div className="min-w-0">
                   <h1 className="truncate text-sm font-semibold text-white/90 sm:text-base">
-                    {book?.title}
+                    {book.title}
                   </h1>
                   <p className="truncate text-xs text-white/40">
-                    by {book?.author?.fullName || "Unknown Author"}
+                    by {book.author?.fullName || "Unknown Author"}
                   </p>
                 </div>
               </div>
@@ -492,7 +495,7 @@ export default function BookReader() {
           aria-label="Book reader"
         >
           {/* ── PDF renderer (if bookFile exists) OR text fallback ── */}
-          {book?.bookFile ? (
+          {book.bookFile ? (
             <div
               className="reader-scroll w-full overflow-auto rounded-2xl bg-white shadow-[0_8px_40px_rgba(0,0,0,0.5)]"
               style={{
@@ -556,19 +559,19 @@ export default function BookReader() {
                     className="text-2xl font-bold leading-tight text-slate-900 sm:text-3xl lg:text-4xl"
                     style={{ fontFamily: "'Lora', Georgia, serif" }}
                   >
-                    {book?.title}
+                    {book.title}
                   </h2>
                   <p className="mt-2 text-sm text-slate-500">
-                    by {book?.author?.fullName || "Unknown Author"}
+                    by {book.author?.fullName || "Unknown Author"}
                   </p>
                 </header>
 
                 {/* Page content */}
-                <p className="reader-page-text drop-cap">{book?.description}</p>
+                <p className="reader-page-text drop-cap">{book.description}</p>
                 <p className="reader-page-text">
                   Page {pageNumber} of {numPages || "?"}. Settle in — this is
                   the kind of story you read slowly, with a cup of something
-                  warm beside you. {book?.author?.fullName} writes with the
+                  warm beside you. {book.author?.fullName} writes with the
                   patience of someone who knows exactly where the road is going.
                 </p>
                 <p className="reader-page-text">
@@ -585,7 +588,7 @@ export default function BookReader() {
 
                 {/* Page footer */}
                 <footer className="mt-10 flex items-center justify-between border-t border-slate-200 pt-4 text-xs text-slate-400">
-                  <span>{book?.genre}</span>
+                  <span>{book.genre}</span>
                   <span className="tabular-nums">{pageNumber}</span>
                 </footer>
               </article>
