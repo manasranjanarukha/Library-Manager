@@ -1,5 +1,5 @@
 // React
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 // Router
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -17,17 +17,11 @@ import {
   BookMarked,
   Clock,
 } from "lucide-react";
-
-// PDF
-import { Document, Page, pdfjs } from "react-pdf";
-
-console.log("API Version:", pdfjs.version);
-console.log("Worker URL:", pdfjs.GlobalWorkerOptions.workerSrc);
-
+import * as pdfjsLib from "pdfjs-dist";
 // Services
 import { bookDetailFromServer } from "../service/bookService";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url,
 ).toString();
@@ -320,7 +314,7 @@ export default function BookReader() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const progress = numPages ? Math.floor((pageNumber / numPages) * 100) : 0;
-
+  const canvasRef = useRef(null);
   /* ── Navigation helpers ── */
   const goToPrevPage = useCallback(
     () => setPageNumber((p) => Math.max(p - 1, 1)),
@@ -367,10 +361,41 @@ export default function BookReader() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+  useEffect(() => {
+    if (!book?.bookFile) return;
 
-  function onDocumentLoadSuccess({ numPages: n }) {
-    setNumPages(n);
-  }
+    async function renderPdf() {
+      try {
+        const pdf = await pdfjsLib.getDocument(book.bookFile).promise;
+
+        setNumPages(pdf.numPages);
+
+        const page = await pdf.getPage(pageNumber);
+
+        const viewport = page.getViewport({
+          scale,
+        });
+
+        const canvas = canvasRef.current;
+
+        if (!canvas) return;
+
+        const context = canvas.getContext("2d");
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({
+          canvasContext: context,
+          viewport,
+        }).promise;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    renderPdf();
+  }, [book, pageNumber, scale]);
 
   /* ── Render gates ── */
   if (loading) return <ReaderLoading />;
@@ -486,7 +511,6 @@ export default function BookReader() {
             </div>
           </div>
         </header>
-
         {/* ══════════════════════════════════════
             READER BODY
         ══════════════════════════════════════ */}
@@ -495,7 +519,7 @@ export default function BookReader() {
           aria-label="Book reader"
         >
           {/* ── PDF renderer (if bookFile exists) OR text fallback ── */}
-          {book.bookFile ? (
+          {book?.bookFile ? (
             <div
               className="reader-scroll w-full overflow-auto rounded-2xl bg-white shadow-[0_8px_40px_rgba(0,0,0,0.5)]"
               style={{
@@ -503,38 +527,9 @@ export default function BookReader() {
                 maxHeight: "calc(100vh - 220px)",
               }}
             >
-              <Document
-                file={book?.bookFile}
-                onLoadSuccess={onDocumentLoadSuccess}
-                onLoadError={(error) => {
-                  console.error("PDF Load Error:", error);
-                }}
-                loading={
-                  <div className="flex h-64 items-center justify-center">
-                    <BookOpen
-                      className="h-10 w-10 animate-pulse text-teal-600"
-                      aria-hidden="true"
-                    />
-                  </div>
-                }
-                error={
-                  <div className="flex h-40 flex-col items-center justify-center gap-2 text-red-400">
-                    <X className="h-8 w-8" />
-                    <p className="text-sm">Failed to load PDF</p>
-                  </div>
-                }
-              >
-                <Page
-                  pageNumber={pageNumber}
-                  scale={scale}
-                  renderTextLayer={false}
-                  renderAnnotationLayer={false}
-                  className="mx-auto"
-                />
-              </Document>
+              <canvas ref={canvasRef} className="mx-auto block" />
             </div>
           ) : (
-            /* ── Rich text page fallback ── */
             <div
               className="reader-scroll w-full overflow-auto rounded-2xl bg-[#fdf9f3] shadow-[0_8px_40px_rgba(0,0,0,0.5)]"
               style={{

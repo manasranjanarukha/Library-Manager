@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { pdfjs } from "react-pdf";
+// import { pdfjs } from "react-pdf";
+import getPdfInfo from "../../utils/pdf";
 import { GENRES } from "../../constants/geners";
 import {
   Upload,
@@ -38,6 +39,7 @@ export default function BookForm({ mode = "add", bookId }) {
     user,
     isDraft,
   } = useBookForm({ mode, bookId });
+  console.log("formDate", formData);
 
   return (
     <form

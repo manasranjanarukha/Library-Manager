@@ -10,7 +10,7 @@ import {
   editBookItemToServer,
 } from "../service/bookService";
 // Utils
-import extractPdfPages from "../utils/pdf";
+import getPdfInfo from "../utils/pdf";
 const INITIAL_FORM = {
   title: "dfgrdregfegrg",
   genre: "",
@@ -70,11 +70,13 @@ export default function useBookForm({ mode = "add", bookId }) {
     }
     if (name === "bookFile") {
       try {
-        const pageCount = await extractPdfPages(file);
+        const { pages } = await getPdfInfo(file);
+        console.log(pages);
+
         setFormData((prev) => ({
           ...prev,
           bookFile: file,
-          pages: String(pageCount),
+          pages: String(pages),
         }));
       } catch (err) {
         if (import.meta.env.DEV) console.error("[BookForm] PDF parse:", err);
