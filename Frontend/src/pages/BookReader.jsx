@@ -20,7 +20,7 @@ import {
 import * as pdfjsLib from "pdfjs-dist";
 // Services
 import { bookDetailFromServer } from "../service/bookService";
-
+import PageMeta from "../components/PageMeta";
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url,
@@ -315,6 +315,7 @@ export default function BookReader() {
 
   const progress = numPages ? Math.floor((pageNumber / numPages) * 100) : 0;
   const canvasRef = useRef(null);
+  const pdfRef = useRef(null);
   /* ── Navigation helpers ── */
   const goToPrevPage = useCallback(
     () => setPageNumber((p) => Math.max(p - 1, 1)),
@@ -361,16 +362,31 @@ export default function BookReader() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!book?.bookFile) return;
+
+    async function loadPdf() {
+      try {
+        const pdf = await pdfjsLib.getDocument(book?.bookFile).promise;
+
+        pdfRef.current = pdf;
+        setNumPages(pdf.numPages);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    loadPdf();
+  }, [book]);
   useEffect(() => {
     if (!book?.bookFile) return;
 
     async function renderPdf() {
       try {
-        const pdf = await pdfjsLib.getDocument(book.bookFile).promise;
+        if (!pdfRef.current) return;
 
-        setNumPages(pdf.numPages);
-
-        const page = await pdf.getPage(pageNumber);
+        const page = await pdfRef.current.getPage(pageNumber);
 
         const viewport = page.getViewport({
           scale,
@@ -395,7 +411,7 @@ export default function BookReader() {
     }
 
     renderPdf();
-  }, [book, pageNumber, scale]);
+  }, [pageNumber, scale]);
 
   /* ── Render gates ── */
   if (loading) return <ReaderLoading />;
@@ -410,8 +426,11 @@ export default function BookReader() {
 
   return (
     <>
-      <ReaderMeta book={book} />
-
+      <PageMeta
+        title={`Reading: ${book.title} — Readymate`}
+        description={`Read "${book.title}" by ${book.author?.fullName || "Unknown Author"} on Readymate. ${book.description?.slice(0, 120) || ""}`}
+        keywords="book"
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
 
