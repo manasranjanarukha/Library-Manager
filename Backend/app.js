@@ -53,7 +53,7 @@ app.use(
   }),
 );
 
-app.use("/book-items", bookItemsRouter);
+app.use("/books", bookItemsRouter);
 app.use("/auth", authRouter);
 app.use("/save-for-later", saveForLaterRouter);
 app.use("/reviews", reviewItemsRouter);

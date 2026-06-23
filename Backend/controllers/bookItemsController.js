@@ -251,32 +251,22 @@ exports.deleteBookItem = async (req, res) => {
 exports.getAllBookItems = async (req, res) => {
   const userId = req.session?.user?._id;
 
-  if (!userId) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
 
   try {
     const user = await User.findById(userId);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const { genre } = req.query;
     const query =
-      user.userType === "Author"
-        ? { author: userId }
-        : {
-            status: "published",
-          };
-    if (genre) {
-      query.genre = genre;
-    }
+      user.userType === "Author" ? { author: userId } : { status: "published" };
 
-    const books = await Book.find(query).populate("author", "fullName");
+    const books = await Book.find(query)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("author", "fullName");
 
-    res.status(200).json(books);
+    res.json(books);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
