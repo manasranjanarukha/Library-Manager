@@ -83,7 +83,7 @@ export default function BellPanel({ saveForLaterBooks, userId, onClose }) {
             {items.map((book) => (
               <li key={book?._id}>
                 <Link
-                  to={`/book-items/${book?._id}`}
+                  to={`/books/${book?._id}`}
                   onClick={onClose}
                   className="flex items-center gap-3 px-4 py-3 hover:bg-[#0F766E]/4 transition-colors group cursor-pointer"
                 >

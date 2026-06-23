@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { PDF_CONFIG, READER_LAYOUT } from "../constants/bookReader";
 import { bookDetailFromServer } from "../service/bookService";
+import { Icon } from "lucide-react";
 const pdfjsLib = await import("pdfjs-dist");
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -8,9 +9,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 export default function useBookReader(id) {
   const { PAGE_BASE_WIDTH, MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } = PDF_CONFIG;
-  const { READER_MAX_HEIGHT, FULLSCREEN_MAX_HEIGHT } = READER_LAYOUT;
+  // keep READER_LAYOUT available but avoid unused local vars
   const [book, setBook] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // book fetch
+  const [pdfLoading, setPdfLoading] = useState(false); // pdf load/render
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
@@ -23,7 +25,6 @@ export default function useBookReader(id) {
   }, [pageNumber, numPages]);
   const canvasRef = useRef(null);
   const pdfRef = useRef(null);
-  console.log(id);
 
   const goToPrevPage = useCallback(
     () => setPageNumber((p) => Math.max(p - 1, 1)),
@@ -42,11 +43,16 @@ export default function useBookReader(id) {
     [],
   );
   const toggleFullscreen = useCallback(() => setIsFullscreen((f) => !f), []);
+  const handlePageInput = useCallback(
+    (e) => {
+      const v = parseInt(e.target.value, 10);
 
-  const handlePageInput = (e) => {
-    const v = parseInt(e.target.value, 10);
-    if (v >= 1 && v <= (numPages || 1)) setPageNumber(v);
-  };
+      if (v >= 1 && v <= (numPages || 1)) {
+        setPageNumber(v);
+      }
+    },
+    [numPages],
+  );
 
   /* ── Keyboard navigation ── */
   useEffect(() => {
@@ -76,13 +82,16 @@ export default function useBookReader(id) {
 
     async function loadPdf() {
       try {
-        const pdf = await pdfjsLib.getDocument(book?.bookFile).promise;
-        console.log("pdf", pdf);
+        setPdfLoading(true);
+
+        const pdf = await pdfjsLib.getDocument(book.bookFile).promise;
 
         pdfRef.current = pdf;
-        setNumPages(pdf?.numPages);
+        setNumPages(pdf.numPages);
       } catch (err) {
         console.error(err);
+      } finally {
+        setPdfLoading(false);
       }
     }
 
@@ -148,5 +157,7 @@ export default function useBookReader(id) {
     toggleFullscreen,
     pageMaxWidth,
     handlePageInput,
+    pdfLoading,
+    Icon,
   };
 }

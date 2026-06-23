@@ -29,6 +29,7 @@ export default function Home() {
     setSearchQuery,
     banners,
     trendingBooks,
+    handleNext,
   } = useHome();
   console.log("tren", trendingBooks);
   return (
@@ -102,6 +103,12 @@ export default function Home() {
               activeGenre={activeGenre}
             />
           </section>
+          <button
+            onClick={handleNext}
+            className="bg-teal-300 py-3.5 text-black"
+          >
+            Next
+          </button>
         </div>
       </main>
     </>

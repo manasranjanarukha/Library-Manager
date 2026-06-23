@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { BookMarked, Clock } from "lucide-react";
+import { Bookmark, Clock } from "lucide-react";
 import { MILESTONES } from "../../constants/bookReader";
 export const ProgressPanel = memo(function ProgressPanel({
   pageNumber,
@@ -20,7 +20,7 @@ export const ProgressPanel = memo(function ProgressPanel({
       {/* Labels row */}
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-[11px] text-white/35">
-          <BookMarked className="h-3.5 w-3.5" aria-hidden="true" />
+          <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
           <span>Reading progress</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-white/35">

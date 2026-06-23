@@ -7,15 +7,19 @@ export default function useHome() {
   const [activeGenre, setActiveGenre] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  const [page, setPage] = useState(1);
+
   useEffect(() => {
-    fetchBookItemsFromServer()
-      .then((fetched) => setBooks(fetched || []))
-      .catch((err) => {
-        if (import.meta.env.DEV) console.error("Error fetching books:", err);
+    fetchBookItemsFromServer(undefined, page)
+      .then((fetched) => {
+        setBooks((prev) => (page === 1 ? fetched : [...prev, ...fetched]));
       })
       .finally(() => setLoading(false));
-  }, []);
-
+  }, [page]);
+  function handleNext() {
+    setPage((page) => page + 1);
+  }
   const banners = useMemo(
     () =>
       [...books]
@@ -56,5 +60,6 @@ export default function useHome() {
     setSearchQuery,
     banners,
     trendingBooks,
+    handleNext,
   };
 }

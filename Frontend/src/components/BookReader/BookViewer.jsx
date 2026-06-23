@@ -1,4 +1,3 @@
-import React from "react";
 import { READER_LAYOUT } from "../../constants/bookReader";
 
 export default function BookViewer({ pageMaxWidth, canvasRef }) {

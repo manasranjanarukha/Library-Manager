@@ -30,7 +30,7 @@ export const addBookItemToServer = async (
   }
 
   const response = await fetch(
-    `${API_URL}/book-items${userId ? `/${userId}` : ""}`,
+    `${API_URL}/books${userId ? `/${userId}` : ""}`,
     {
       method: "POST",
       body: formData,
@@ -76,7 +76,7 @@ export const editBookItemToServer = async (
     formData.append("bookFile", bookFile);
   }
 
-  const response = await fetch(`${API_URL}/book-items/${id}`, {
+  const response = await fetch(`${API_URL}/books/${id}`, {
     method: "PUT",
     body: formData, // ✅ send as FormData
   });
@@ -92,7 +92,7 @@ export const editBookItemToServer = async (
 };
 
 export const deleteBookFromServer = async (id) => {
-  const response = await fetch(`${API_URL}/book-items/${id}`, {
+  const response = await fetch(`${API_URL}/books/${id}`, {
     method: "DELETE",
   });
 
@@ -105,23 +105,20 @@ export const deleteBookFromServer = async (id) => {
   return data;
 };
 
-export const fetchBookItemsFromServer = async (genre) => {
+export const fetchBookItemsFromServer = async (genre, page) => {
   const url = genre
-    ? `${API_URL}/book-items?genre=${encodeURIComponent(genre)}`
-    : `${API_URL}/book-items`;
+    ? `${API_URL}/books?genre=${encodeURIComponent(genre)}`
+    : `${API_URL}/books?page=${page}&limit=10`;
+
   const response = await fetch(url, {
     credentials: "include",
   });
-  if (!response.ok) {
-    throw new Error("Failed to fetch items");
-  }
-  const data = await response.json();
 
-  return data;
+  return response.json();
 };
 
 export const bookDetailFromServer = async (id) => {
-  const response = await fetch(`${API_URL}/book-items/${id}`, {
+  const response = await fetch(`${API_URL}/books/${id}`, {
     method: "GET",
     credentials: "include",
   });
@@ -135,7 +132,7 @@ export const bookDetailFromServer = async (id) => {
 };
 
 export const storeBooksRating = async (id) => {
-  const response = await fetch(`${API_URL}/book-items/${id}/rating`, {
+  const response = await fetch(`${API_URL}/books/${id}/rating`, {
     method: "GET",
   });
   if (!response.ok) {

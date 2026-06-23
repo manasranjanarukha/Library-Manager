@@ -1,6 +1,5 @@
-import { memo } from "react";
 import { PROGRESS_BADGE_SIZE } from "../../constants/bookReader";
-export const ProgressBadge = memo(function ProgressBadge({ progress }) {
+export function ProgressBadge({ progress }) {
   const size = PROGRESS_BADGE_SIZE;
   const stroke = 2.8;
   const r = (size - stroke) / 2;
@@ -42,4 +41,4 @@ export const ProgressBadge = memo(function ProgressBadge({ progress }) {
       </span>
     </div>
   );
-});
+}

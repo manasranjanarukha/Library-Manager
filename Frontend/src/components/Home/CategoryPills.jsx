@@ -15,7 +15,7 @@ export default function CategoryPills({ active = "All" }) {
           return (
             <Link
               key={genre}
-              to={`/book-items/categories/${genre}`}
+              to={`/books/categories/${genre}`}
               onClick={() => console.log(isActive)}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-95 ${
                 isActive

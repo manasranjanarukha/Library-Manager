@@ -39,7 +39,7 @@ export default function BookGridCard({ book }) {
   return (
     <div className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] shadow-[0_2px_12px_rgba(0,0,0,0.07)] border border-black active:scale-[0.99] h-full flex flex-col">
       <Link
-        to={`/book-items/${_id}`}
+        to={`/books/${_id}`}
         className="group relative overflow-hidden rounded-[14px] border border-slate-100 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-teal-100 hover:shadow-[0_12px_28px_rgba(15,110,86,0.13)]"
         aria-label={`${title} by ${author?.fullName}`}
       >

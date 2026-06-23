@@ -168,7 +168,7 @@ export default function BookCard({ book }) {
 
           <div className="flex items-center gap-2">
             <Link
-              to={`/book-items/${_id}`}
+              to={`/books/${_id}`}
               className="flex-1 flex items-center justify-center gap-1.5 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <span>View Details</span>

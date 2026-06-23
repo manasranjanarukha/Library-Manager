@@ -1,33 +1,14 @@
 // React
-import { useEffect, useState, useCallback, useRef, memo } from "react";
+import { useParams } from "react-router-dom";
 
 // Router
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 // Icons
-import {
-  ChevronLeft,
-  ChevronRight,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
-  Minimize,
-  BookOpen,
-  X,
-  BookMarked,
-  Clock,
-} from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 // Services
-import { bookDetailFromServer } from "../service/bookService";
 import PageMeta from "../components/PageMeta";
-
-import {
-  READER_LAYOUT,
-  PDF_CONFIG,
-  MILESTONES,
-  PROGRESS_BADGE_SIZE,
-} from "../constants/bookReader";
 import useBookReader from "../hooks/useBookReader";
 import ReaderLoading from "../components/BookReader/ReaderLoading";
 import ReaderNotFound from "../components/BookReader/ReaderNotFound";
@@ -42,17 +23,12 @@ import BookViewerError from "../components/BookReader/BookViewerError";
 
 export default function BookReader() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const {
     loading,
-    PDF_CONFIG,
-    READER_LAYOUT,
     book,
     pageNumber,
-    setPageNumber,
     numPages,
     scale,
-    setScale,
     progress,
     canvasRef,
     goToNextPage,
@@ -63,12 +39,11 @@ export default function BookReader() {
     toggleFullscreen,
     pageMaxWidth,
     handlePageInput,
+    pdfLoading,
   } = useBookReader(id);
-  console.log("log", id);
 
+  if (loading || pdfLoading) return <ReaderLoading />;
   if (!book) return <ReaderNotFound />;
-  if (loading && canvasRef) return <ReaderLoading />;
-  console.log(book);
 
   return (
     <>
@@ -155,7 +130,7 @@ export default function BookReader() {
 
           {/* ── Back to book detail ── */}
           <Link
-            to={`/book-items/${id}`}
+            to={`/books/${id}`}
             className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-white/30 transition-colors hover:text-teal-400"
           >
             <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />

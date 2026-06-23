@@ -13,7 +13,7 @@ function GridCard({ book, onRemove, removing }) {
       navigate("/auth/login");
       return;
     }
-    navigate(`/book-items/${book?._id}`);
+    navigate(`/books/${book?._id}`);
   }
 
   return (

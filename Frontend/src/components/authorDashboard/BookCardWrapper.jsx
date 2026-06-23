@@ -185,7 +185,7 @@ export default function BookCardWrapper({ book, onDeleteRequest }) {
           {/* Actions */}
           <div className="flex items-center gap-2 mt-auto">
             <Link
-              to={`/book-items/${book._id}`}
+              to={`/books/${book._id}`}
               className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#0F766E]/8 border border-[#0F766E]/20 text-[#0F766E] text-[11px] sm:text-xs font-semibold hover:bg-[#0F766E] hover:text-white transition-all duration-200 active:scale-95 cursor-pointer"
               aria-label={`View ${book.title}`}
             >

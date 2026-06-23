@@ -59,7 +59,7 @@ function App() {
           />
 
           <Route
-            path="/book-items/:id"
+            path="/books/:id"
             element={
               <ProtectedRoute allowedRoles={["Reader"]}>
                 <suspense fallback={<div>Loading...</div>}>
@@ -107,10 +107,7 @@ function App() {
             }
           />
 
-          <Route
-            path="/book-items/categories/:genre"
-            element={<CategoryPage />}
-          />
+          <Route path="/books/categories/:genre" element={<CategoryPage />} />
         </Routes>
       </SaveForLaterProvider>
     </UserProvider>
